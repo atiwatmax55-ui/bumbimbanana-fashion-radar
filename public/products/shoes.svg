@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="600" viewBox="0 0 480 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8F4EC" />
+      <stop offset="1" stop-color="#F0EAD9" />
+    </linearGradient>
+  </defs>
+  <rect width="480" height="600" fill="url(#bg)" />
+  <rect x="24" y="24" width="432" height="552" rx="28" fill="none" stroke="#D9CFB8" stroke-width="2" />
+  <g transform="translate(240, 260)" stroke="#B6924F" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-90,40 C-90,10 -70,-10 -40,-15 L20,-40 C40,-48 60,-40 60,-20 L60,10 L90,25 C100,30 100,45 88,45 L-80,45 C-86,45 -90,43 -90,40 Z" />
+           <path d="M-40,-15 L-40,10" />
+           <path d="M-10,-28 L-10,10" />
+  </g>
+  <text x="240" y="536" text-anchor="middle" font-family="'Noto Sans Thai','Helvetica Neue',Arial,sans-serif" font-size="26" font-weight="700" fill="#1A1A1A">รองเท้า</text>
+  <text x="240" y="566" text-anchor="middle" font-family="'Noto Sans Thai','Helvetica Neue',Arial,sans-serif" font-size="15" fill="#B6924F" letter-spacing="2">BUMBIMBANANA</text>
+</svg>
