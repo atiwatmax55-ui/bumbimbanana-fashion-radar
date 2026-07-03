@@ -12,7 +12,7 @@ import {
   getTopCategory,
   GOAL_LABELS,
 } from "@/lib/dashboard/aggregate";
-import { formatBaht, formatBahtCompact, formatNumber, formatNumberCompact, formatPercent } from "@/lib/utils/format";
+import { displayCommission, formatBaht, formatBahtCompact, formatNumber, formatNumberCompact, formatPercent } from "@/lib/utils/format";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataFreshnessBadge } from "@/components/shared/data-freshness-badge";
 import { TimeRangeToggle } from "@/components/shared/time-range-toggle";
@@ -31,6 +31,7 @@ interface DashboardViewProps {
 export function DashboardView({ products, lastUpdatedAt }: DashboardViewProps) {
   const [goal, setGoal] = useState<ProductGoal>("interest");
   const [range, setRange] = useState<TimeRange>("30d");
+  const isShopeeData = products.length > 0 && products.every((p) => p.source === "shopee");
 
   const totals = useMemo(() => getDashboardTotals(products), [products]);
   const categoryTotals = useMemo(() => getCategoryTotals(products, range), [products, range]);
@@ -49,7 +50,11 @@ export function DashboardView({ products, lastUpdatedAt }: DashboardViewProps) {
     <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 md:px-8 md:py-8">
       <PageHeader
         title="ภาพรวม (Dashboard)"
-        description="สรุปภาพรวมสินค้าแฟชั่นผู้หญิงที่มีแนวโน้มขายดีบน TikTok Shop"
+        description={
+          isShopeeData
+            ? "สรุปภาพรวมสินค้าแฟชั่นผู้หญิงจาก Shopee Product Feed (ข้อมูลจริง)"
+            : "สรุปภาพรวมสินค้าแฟชั่นผู้หญิงที่มีแนวโน้มขายดีบน TikTok Shop"
+        }
       >
         <DataFreshnessBadge lastUpdatedAt={lastUpdatedAt} />
       </PageHeader>
@@ -58,13 +63,22 @@ export function DashboardView({ products, lastUpdatedAt }: DashboardViewProps) {
         <StatCard label="จำนวนสินค้าแฟชั่นทั้งหมด" value={formatNumber(totals.totalProducts)} subLabel="รายการในระบบ" icon={Package} />
         <StatCard label="ยอดขายรวม 7 วัน" value={formatNumberCompact(totals.totalSales7d)} subLabel="ชิ้น" icon={TrendingUp} />
         <StatCard label="ยอดขายรวม 30 วัน" value={formatNumberCompact(totals.totalSales30d)} subLabel="ชิ้น" icon={TrendingUp} />
-        <StatCard
-          label="ค่าคอมมิชชันรวมโดยประมาณ"
-          value={formatBahtCompact(totals.totalEstimatedCommission)}
-          subLabel="ประมาณการจาก 30 วัน"
-          icon={Wallet}
-          valueClassName="text-brand-gold-hover"
-        />
+        {isShopeeData ? (
+          <StatCard
+            label="จำนวนขายสะสมรวม (Feed)"
+            value={formatNumberCompact(totals.totalSales30d)}
+            subLabel="ชิ้น (ยอดสะสมจาก Shopee Feed)"
+            icon={Package}
+          />
+        ) : (
+          <StatCard
+            label="ค่าคอมมิชชันรวมโดยประมาณ"
+            value={formatBahtCompact(totals.totalEstimatedCommission)}
+            subLabel="ประมาณการจาก 30 วัน"
+            icon={Wallet}
+            valueClassName="text-brand-gold-hover"
+          />
+        )}
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -114,17 +128,36 @@ export function DashboardView({ products, lastUpdatedAt }: DashboardViewProps) {
           <TimeRangeToggle value={range} onChange={setRange} />
         </div>
         <GoalSelector value={goal} onChange={setGoal} />
-        <div className="flex flex-col gap-2">
-          {goalRanked.map((product) => (
-            <ProductMiniCard
-              key={product.id}
-              product={product}
-              metricLabel={GOAL_LABELS[goal]}
-              metricValue={goalMetricValue(product, goal, range)}
-              metricClassName={goal === "growth" ? (product.growthRate >= 0 ? "text-positive" : "text-negative") : "text-brand-gold-hover"}
-            />
-          ))}
-        </div>
+
+        {/* แจ้งเตือนเมื่อเลือกค่าคอมแต่ยังไม่มีข้อมูลจริง */}
+        {goal === "commission" && goalRanked.every((p) => !p.commissionRate || p.commissionRate === 0) ? (
+          <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 dark:border-amber-800 dark:bg-amber-950/40">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+              ยังไม่มีข้อมูลค่าคอมจริงจาก Shopee Affiliate
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              นำเข้าไฟล์รายงานจาก Shopee Affiliate Center เพื่อดูค่าคอมจริงและใช้ตัวกรองนี้ได้อย่างแม่นยำ
+            </p>
+            <Link
+              href="/commission-import"
+              className="self-start rounded-full bg-brand-gold px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-brand-gold-hover"
+            >
+              นำเข้าค่าคอมมิชชัน
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {goalRanked.map((product) => (
+              <ProductMiniCard
+                key={product.id}
+                product={product}
+                metricLabel={GOAL_LABELS[goal]}
+                metricValue={goalMetricValue(product, goal, range)}
+                metricClassName={goal === "growth" ? (product.growthRate >= 0 ? "text-positive" : "text-negative") : "text-brand-gold-hover"}
+              />
+            ))}
+          </div>
+        )}
         <Button
           variant="outline"
           className="self-start rounded-full"
@@ -152,7 +185,7 @@ export function DashboardView({ products, lastUpdatedAt }: DashboardViewProps) {
 function goalMetricValue(product: Product, goal: ProductGoal, range: TimeRange): string {
   switch (goal) {
     case "commission":
-      return formatPercent(product.commissionRate);
+      return displayCommission(product);
     case "sales":
       return `${formatNumber(range === "7d" ? product.sales7d : product.sales30d)} ชิ้น`;
     case "revenue":

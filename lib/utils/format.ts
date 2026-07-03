@@ -69,3 +69,29 @@ export function growthColorClass(growthRate: number): string {
 export function formatRank(rank: number): string {
   return `อันดับ ${rank}`;
 }
+
+/**
+ * แสดงค่าคอมมิชชันที่ถูกต้องตาม logic ของระบบ
+ * - มีข้อมูลจริงจาก Shopee Affiliate (commissionRate > 0 และ ไม่มี commissionStatus) → แสดง "%"
+ * - ยังไม่มีข้อมูล → แสดง commissionStatus หรือ "รอข้อมูลค่าคอมจาก Shopee Affiliate"
+ * ห้ามแสดง "0%" เพราะทำให้เข้าใจผิดว่าค่าคอมเป็น 0
+ */
+export function displayCommission(product: {
+  commissionRate: number;
+  commissionStatus?: string;
+}): string {
+  if (product.commissionRate > 0 && !product.commissionStatus) {
+    return formatPercent(product.commissionRate);
+  }
+  return product.commissionStatus ?? "รอข้อมูลค่าคอมจาก Shopee Affiliate";
+}
+
+/** คืนค่า CSS class สีสำหรับค่าคอมมิชชัน: มีข้อมูลจริง = ทอง, ยังไม่มี = muted */
+export function commissionColorClass(product: {
+  commissionRate: number;
+  commissionStatus?: string;
+}): string {
+  return product.commissionRate > 0 && !product.commissionStatus
+    ? "text-brand-gold-hover"
+    : "text-muted-foreground";
+}

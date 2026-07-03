@@ -4,10 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Product } from "@/types/product";
+import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SaveProductButton } from "@/components/shared/save-product-button";
 import {
+  commissionColorClass,
+  displayCommission,
   formatBaht,
   formatNumber,
   formatPercent,
@@ -18,10 +21,19 @@ import {
 interface BuildColumnsArgs {
   isSaved: (productId: string) => boolean;
   onToggleSave: (productId: string) => void;
+  isUserProduct: (productId: string) => boolean;
+  onEdit: (product: Product) => void;
+  onRemove: (productId: string) => void;
 }
 
 /** กำหนดคอลัมน์ตารางสินค้าสำหรับหน้าจอคอมพิวเตอร์ของ Product Radar (ใช้ TanStack Table) */
-export function buildProductColumns({ isSaved, onToggleSave }: BuildColumnsArgs): ColumnDef<Product>[] {
+export function buildProductColumns({
+  isSaved,
+  onToggleSave,
+  isUserProduct,
+  onEdit,
+  onRemove,
+}: BuildColumnsArgs): ColumnDef<Product>[] {
   return [
     {
       id: "image",
@@ -40,12 +52,17 @@ export function buildProductColumns({ isSaved, onToggleSave }: BuildColumnsArgs)
       accessorKey: "productName",
       header: "ชื่อสินค้า",
       cell: ({ row }) => (
-        <Link
-          href={`/products/${row.original.id}`}
-          className="line-clamp-2 max-w-50 text-sm font-semibold text-foreground hover:text-brand-gold-hover"
-        >
-          {row.original.productName}
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href={`/products/${row.original.id}`}
+            className="line-clamp-2 max-w-50 text-sm font-semibold text-foreground hover:text-brand-gold-hover"
+          >
+            {row.original.productName}
+          </Link>
+          {isUserProduct(row.original.id) ? (
+            <Badge className="w-fit bg-brand-gold text-[10px] text-foreground">เพิ่มเอง</Badge>
+          ) : null}
+        </div>
       ),
     },
     {
@@ -69,11 +86,18 @@ export function buildProductColumns({ isSaved, onToggleSave }: BuildColumnsArgs)
     },
     {
       accessorKey: "commissionRate",
-      header: "ค่าคอมมิชชัน",
+      header: "ค่าคอมมิชชัน (Affiliate)",
       cell: ({ row }) => (
-        <span className="text-sm font-bold text-brand-gold-hover">
-          {formatPercent(row.original.commissionRate)}
-        </span>
+        <div className="flex flex-col gap-0.5">
+          <span className={`text-sm font-bold ${commissionColorClass(row.original)}`}>
+            {displayCommission(row.original)}
+          </span>
+          {row.original.source === "shopee" ? (
+            <span className="text-[10px] leading-tight text-muted-foreground/60">
+              ต้องนำเข้าจาก Shopee Affiliate
+            </span>
+          ) : null}
+        </div>
       ),
     },
     {
@@ -147,6 +171,28 @@ export function buildProductColumns({ isSaved, onToggleSave }: BuildColumnsArgs)
             isSaved={isSaved(row.original.id)}
             onToggle={() => onToggleSave(row.original.id)}
           />
+          {isUserProduct(row.original.id) ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => onEdit(row.original)}
+              >
+                <Pencil className="size-3.5" />
+                แก้ไข
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="rounded-full"
+                onClick={() => onRemove(row.original.id)}
+              >
+                <Trash2 className="size-3.5" />
+                ลบ
+              </Button>
+            </>
+          ) : null}
         </div>
       ),
     },

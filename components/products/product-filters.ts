@@ -1,5 +1,25 @@
 import type { ProductCategory } from "@/types/product";
 
+/** ตัวกรองด่วน (Quick Filter Chip) เลือกได้ทีละ 1 — ไม่รวมกับ RadarFilterState */
+export type QuickFilterKey =
+  | "all"                  // ทั้งหมด
+  | "best_seller"          // ขายดีที่สุด (salesRank ≤ 50)
+  | "trending"             // กำลังมาแรง (growthRate ≥ 20%)
+  | "has_commission"       // มีค่าคอมจริงแล้ว
+  | "wait_commission"      // รอข้อมูลค่าคอม (source=shopee ยังไม่มีค่าคอมจริง)
+  | "strategy_review"      // รอฝ่ายกลยุทธ์ตรวจ
+  | "approved";            // อนุมัติทำคอนเทนต์แล้ว
+
+export const QUICK_FILTER_LABELS: Record<QuickFilterKey, string> = {
+  all:              "ทั้งหมด",
+  best_seller:      "ขายดีที่สุด",
+  trending:         "กำลังมาแรง",
+  has_commission:   "มีค่าคอมจริงแล้ว",
+  wait_commission:  "รอข้อมูลค่าคอม",
+  strategy_review:  "รอฝ่ายกลยุทธ์ตรวจ",
+  approved:         "อนุมัติแล้ว",
+};
+
 /** สถานะตัวกรองทั้งหมดของหน้า Product Radar (หน้าค้นหาและคัดสินค้า) */
 export interface RadarFilterState {
   categories: ProductCategory[];

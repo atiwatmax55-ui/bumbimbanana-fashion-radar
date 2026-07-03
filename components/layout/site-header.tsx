@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS } from "@/components/layout/nav-items";
+import { NAV_ITEMS, SECONDARY_NAV_ITEMS } from "@/components/layout/nav-items";
 
 /** ส่วนหัวเว็บไซต์: แสดงชื่อแบรนด์เสมอ และเมนูนำทางแบบเต็มบนหน้าจอคอมพิวเตอร์ (มือถือใช้ BottomNav แทน) */
 export function SiteHeader() {
@@ -22,7 +22,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {NAV_ITEMS.map((item) => {
+          {[...NAV_ITEMS, ...SECONDARY_NAV_ITEMS].map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (

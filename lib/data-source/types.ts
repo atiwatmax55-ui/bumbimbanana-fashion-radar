@@ -28,7 +28,7 @@ export interface ProductQueryOptions {
 
 /** สถานะการเชื่อมต่อ/ซิงก์ข้อมูล แสดงในหน้า Data Status (หน้าสถานะข้อมูล) */
 export interface DataSyncStatus {
-  source: "mock" | "windsor";
+  source: "mock" | "windsor" | "shopee";
   lastSyncedAt: string;
   totalProducts: number;
   syncStatus: "success" | "pending" | "error";

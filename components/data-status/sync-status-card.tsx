@@ -28,7 +28,16 @@ export function SyncStatusCard({ status }: SyncStatusCardProps) {
         </Badge>
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Field label="แหล่งข้อมูลปัจจุบัน" value={status.source === "mock" ? "Mock Data (ข้อมูลตัวอย่าง)" : "Windsor.ai"} />
+        <Field
+          label="แหล่งข้อมูลปัจจุบัน"
+          value={
+            status.source === "shopee"
+              ? "Shopee Product Feed (Supabase)"
+              : status.source === "mock"
+                ? "Mock Data (ข้อมูลตัวอย่าง)"
+                : "Windsor.ai"
+          }
+        />
         <Field label="จำนวนสินค้าในระบบ" value={`${status.totalProducts.toLocaleString("th-TH")} รายการ`} />
         <Field label="ซิงก์ล่าสุด" value={formatThaiDateTime(status.lastSyncedAt)} />
       </div>

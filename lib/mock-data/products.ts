@@ -1,21 +1,11 @@
-import type { Product, ProductCategory } from "@/types/product";
-import { getCategoryPlaceholderImage } from "@/lib/data-source/category-image";
+import type { Product } from "@/types/product";
+import { buildProductFromDraft, type ProductDraft } from "@/lib/data-source/build-product";
 import { computeProductRanks } from "@/lib/data-source/compute-ranks";
 
 /** วันที่ซิงก์ข้อมูล Mock Data ล่าสุด ใช้ร่วมกันทุกหน้าที่แสดงสถานะข้อมูล */
 export const MOCK_DATA_LAST_SYNCED_AT = "2026-06-27T06:00:00+07:00";
 
-type RawProduct = {
-  productName: string;
-  shopName: string;
-  category: ProductCategory;
-  price: number;
-  commissionRate: number;
-  sales7d: number;
-  sales30d: number;
-  growthRate: number;
-  interestScore: number;
-};
+type RawProduct = ProductDraft;
 
 const RAW_PRODUCTS: RawProduct[] = [
   // กางเกงยีนส์
@@ -72,19 +62,12 @@ const RAW_PRODUCTS: RawProduct[] = [
 ];
 
 function buildProducts(): Product[] {
-  const withId = RAW_PRODUCTS.map((raw, index) => {
+  const withoutRanks = RAW_PRODUCTS.map((raw, index) => {
     const id = String(index + 1).padStart(3, "0");
-    return {
-      ...raw,
-      id,
-      productImage: getCategoryPlaceholderImage(raw.category),
-      productUrl: `https://www.tiktokshop.example/product/${id}`,
-      estimatedRevenue: Math.round(raw.sales30d * raw.price),
-      lastUpdatedAt: MOCK_DATA_LAST_SYNCED_AT,
-    };
+    return buildProductFromDraft(raw, id, MOCK_DATA_LAST_SYNCED_AT);
   });
 
-  return computeProductRanks(withId);
+  return computeProductRanks(withoutRanks);
 }
 
 /** สินค้าแฟชั่นผู้หญิงตัวอย่างทั้งหมดในระบบ (Mock Data) */

@@ -9,13 +9,23 @@ interface ProductTableProps {
   products: Product[];
   isSaved: (productId: string) => boolean;
   onToggleSave: (productId: string) => void;
+  isUserProduct: (productId: string) => boolean;
+  onEdit: (product: Product) => void;
+  onRemove: (productId: string) => void;
 }
 
 /** ตารางสินค้าสำหรับหน้าจอคอมพิวเตอร์ของ Product Radar (ใช้ TanStack Table) */
-export function ProductTable({ products, isSaved, onToggleSave }: ProductTableProps) {
+export function ProductTable({
+  products,
+  isSaved,
+  onToggleSave,
+  isUserProduct,
+  onEdit,
+  onRemove,
+}: ProductTableProps) {
   const columns = useMemo(
-    () => buildProductColumns({ isSaved, onToggleSave }),
-    [isSaved, onToggleSave]
+    () => buildProductColumns({ isSaved, onToggleSave, isUserProduct, onEdit, onRemove }),
+    [isSaved, onToggleSave, isUserProduct, onEdit, onRemove]
   );
 
   const table = useReactTable({

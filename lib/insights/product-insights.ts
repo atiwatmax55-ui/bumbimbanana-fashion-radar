@@ -28,12 +28,17 @@ export function getProductInsights(product: Product): ProductInsights {
   const highlights: string[] = [];
   const reasons: string[] = [];
 
-  if (product.commissionRank <= 5) {
-    highlights.push(`ค่าคอมมิชชันติดอันดับ ${product.commissionRank} ของระบบ (${formatPercent(product.commissionRate)})`);
-  } else if (product.commissionRate >= 20) {
-    highlights.push(`ค่าคอมมิชชันสูงถึง ${formatPercent(product.commissionRate)}`);
+  const hasRealCommission = product.commissionRate > 0 && !product.commissionStatus;
+  if (hasRealCommission) {
+    if (product.commissionRank <= 5) {
+      highlights.push(`ค่าคอมมิชชัน (Affiliate) ติดอันดับ ${product.commissionRank} ของระบบ (${formatPercent(product.commissionRate)})`);
+    } else if (product.commissionRate >= 20) {
+      highlights.push(`ค่าคอมมิชชัน (Affiliate) สูงถึง ${formatPercent(product.commissionRate)}`);
+    } else {
+      highlights.push(`ค่าคอมมิชชัน (Affiliate) ${formatPercent(product.commissionRate)} ต่อยอดขาย 1 ชิ้น`);
+    }
   } else {
-    highlights.push(`ค่าคอมมิชชัน ${formatPercent(product.commissionRate)} ต่อยอดขาย 1 ชิ้น`);
+    highlights.push("ยังไม่มีข้อมูลค่าคอมจริงจาก Shopee Affiliate — นำเข้าไฟล์รายงานเพื่อดูค่าคอมที่แท้จริง");
   }
 
   if (product.salesRank <= 5) {

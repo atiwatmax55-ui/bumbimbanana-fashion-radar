@@ -38,6 +38,11 @@ export interface Product {
   price: number;
   /** ค่าคอมมิชชัน หน่วยเปอร์เซ็นต์ */
   commissionRate: number;
+  /**
+   * ถ้ามีค่า → แสดงข้อความนี้แทนตัวเลข commissionRate ในทุก UI
+   * ใช้สำหรับ Shopee products ที่ไม่มีข้อมูลค่าคอมมิชชันจาก Feed
+   */
+  commissionStatus?: string;
   sales7d: number;
   sales30d: number;
   /** รายได้โดยประมาณ หน่วยบาท (คำนวณจากยอดขาย 30 วัน x ราคา) */
@@ -53,6 +58,14 @@ export interface Product {
   /** อันดับการเติบโต (1 = เติบโตเร็วที่สุดในระบบ) */
   growthRank: number;
   lastUpdatedAt: string;
+  /** แหล่งข้อมูลสินค้า — ถ้าไม่มีค่า = mock / tiktok */
+  source?: "shopee";
+  /**
+   * สถานะ workflow ของสินค้านี้ในกระบวนการคัดเลือก
+   * radar_found = ค้นพบจากระบบ | strategy_review = รอฝ่ายกลยุทธ์ตรวจ |
+   * approved_for_content = อนุมัติทำคอนเทนต์ | rejected = ปฏิเสธ
+   */
+  workflowStatus?: "radar_found" | "strategy_review" | "approved_for_content" | "rejected";
 }
 
 /** สินค้าที่ถูกบันทึกไว้พร้อมโน้ตส่วนตัว สอดคล้องกับตาราง saved_products */
