@@ -43,6 +43,7 @@ export type NormalizedShopeeRow = {
   passed_by_rule:       string | null;
   filter_reason:        string | null;
   imported_at:          string;
+  last_seen_at:         string;   // เวลาเห็นสินค้านี้ใน Feed ล่าสุด (สำหรับตรวจความสด)
 };
 
 export type NormalizeOk   = { ok: true;  row: NormalizedShopeeRow; itemSold: number };
@@ -98,7 +99,7 @@ export function normalizeShopeeRow(
   const cat1 = get(raw, "global_category1", "category1", "category_level_1", "main_category");
   const cat2 = get(raw, "global_category2", "category2", "category_level_2");
   const cat3 = get(raw, "global_category3", "category3", "category_level_3");
-  const category: string = mapShopeeCategory(cat1) || "อื่นๆ";
+  const category: string = mapShopeeCategory(cat1, cat2) || "อื่นๆ";
 
   // ── 5. optional fields ────────────────────────────────────────────────
   const imageUrl =
@@ -148,6 +149,7 @@ export function normalizeShopeeRow(
     passed_by_rule:      opts.passedByRule,
     filter_reason:       opts.filterReason,
     imported_at:         opts.importedAt,
+    last_seen_at:        opts.importedAt,
   };
 
   return { ok: true, row, itemSold };

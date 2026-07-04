@@ -9,6 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-display-latin), var(--font-display-thai), serif;
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --color-brand-gold: var(--brand-gold);
@@ -98,8 +99,16 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* กัน horizontal scroll ทั้งหน้าบนมือถือ — ใช้ clip (ไม่ใช่ hidden) เพื่อไม่ให้ sticky header เสีย
+       ตารางกว้าง/แกลเลอรีที่ต้อง scroll แนวนอนยังทำได้ผ่าน overflow-x-auto ในกรอบตัวเอง */
+    overflow-x: clip;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* หัวเรื่องแนว Fashion Editorial — serif พรีเมียม อ่านง่ายทั้งไทย/อังกฤษ */
+.font-display {
+  font-family: var(--font-display-latin), var(--font-display-thai), "Noto Serif Thai", serif;
 }

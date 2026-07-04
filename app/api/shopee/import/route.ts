@@ -415,14 +415,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
+  // ─── บันทึก Snapshot ยอดขายสะสมรายวัน (สำหรับวิเคราะห์ 7/30 วัน) ─────────────
+  // ความล้มเหลวของ snapshot ต้องไม่ทำให้ sync ทั้งรอบล้มเหลว — เก็บเป็นข้อความแทน
+  const snapshotNote = await writeDailySnapshots(supabase, finalRecords);
+
   const completedAt = new Date().toISOString();
 
   await updateLog(
     supabase, logId, dataRowCount, eligibleCount,
     insertedCount, updatedCount, skippedReasons.length, failedCount,
     failedCount > 0
-      ? `Import มีปัญหา — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}, ล้มเหลว ${failedCount}: ${firstImportError ?? "unknown"}`
-      : `Import สำเร็จ — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}`,
+      ? `Import มีปัญหา — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}, ล้มเหลว ${failedCount}: ${firstImportError ?? "unknown"}${snapshotNote}`
+      : `Import สำเร็จ — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}${snapshotNote}`,
     completedAt,
   );
 
@@ -468,6 +472,68 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
+
+/**
+ * บันทึก snapshot ยอดขายสะสมของสินค้าที่ sync สำเร็จ (1 แถว/สินค้า/วัน)
+ * และลบ snapshot ที่เก่ากว่า 100 วัน — คืนข้อความสรุปสั้น ๆ ต่อท้าย log
+ * ตาราง/ฟังก์ชันยังไม่ถูก migrate → คืนข้อความเตือน ไม่ throw
+ */
+async function writeDailySnapshots(
+  supabase: ReturnType<typeof getSupabaseServerClient>,
+  records: NormalizedShopeeRow[],
+): Promise<string> {
+  if (records.length === 0) return "";
+  try {
+    const snapshotDate = new Date().toISOString().slice(0, 10);
+
+    // จับคู่ external_product_id → products.id (BIGINT) เป็น batch
+    const idMap = new Map<string, number>();
+    const extIds = records.map((r) => r.source_item_id);
+    for (let i = 0; i < extIds.length; i += 500) {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, external_product_id")
+        .eq("source_platform", "shopee")
+        .in("external_product_id", extIds.slice(i, i + 500));
+      if (error) return ` | snapshot ล้มเหลว: ${error.message}`;
+      for (const row of (data ?? []) as { id: number; external_product_id: string }[]) {
+        idMap.set(row.external_product_id, row.id);
+      }
+    }
+
+    const rows = records.flatMap((r) => {
+      const pid = idMap.get(r.source_item_id);
+      if (pid === undefined) return [];
+      return [{
+        product_id:    pid,
+        snapshot_date: snapshotDate,
+        item_sold:     r.item_sold,
+        price:         r.price,
+      }];
+    });
+
+    let written = 0;
+    for (let i = 0; i < rows.length; i += 500) {
+      const { error } = await supabase
+        .from("product_sales_snapshots")
+        .upsert(rows.slice(i, i + 500), { onConflict: "product_id,snapshot_date" });
+      if (error) {
+        // ตารางยังไม่ถูกสร้าง (PGRST205) หรือ error อื่น — รายงานใน log แต่ไม่ล้ม sync
+        return error.code === "PGRST205"
+          ? " | ยังไม่ได้รัน migration 0008 — ไม่มีการเก็บ snapshot"
+          : ` | snapshot ล้มเหลว: ${error.message}`;
+      }
+      written += Math.min(500, rows.length - i);
+    }
+
+    // retention: เก็บย้อนหลัง 100 วัน
+    await supabase.rpc("radar_prune_snapshots");
+
+    return ` | snapshot ${written} รายการ (${snapshotDate})`;
+  } catch (e) {
+    return ` | snapshot ล้มเหลว: ${e instanceof Error ? e.message : "unknown"}`;
+  }
+}
 
 async function updateLog(
   supabase: ReturnType<typeof getSupabaseServerClient>,

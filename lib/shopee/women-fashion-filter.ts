@@ -27,53 +27,57 @@ const DENY_SET = new Set<string>([
   "girl clothes",
   "girl shoes",
   "sports footwear",
-]);
-
-// ─── Allow Lists ──────────────────────────────────────────────────────────────
-
-/** หมวดหลักผู้หญิง — เมื่อเป็น cat1 ให้ผ่านพร้อมทุก subcat */
-const CAT1_WOMEN_SET = new Set<string>([
-  "women clothes",
-  "women bags",
+  // v3 — เว็บนี้แสดงเฉพาะ "เสื้อผ้า" ผู้หญิงเท่านั้น: ตัดรองเท้า กระเป๋า
+  // เครื่องประดับ นาฬิกา แว่นตา และของใช้อื่นออกทั้งหมด
   "women shoes",
+  "women bags",
   "women watches",
-  "women muslim wear",
-]);
-
-/**
- * หมวดแฟชั่นผู้หญิงโดยตรง — เมื่อปรากฏเป็น cat1 ให้ผ่านได้เลย
- * (ในโครงสร้าง Shopee หมวดเหล่านี้อยู่ใต้ Women's Fashion navigation)
- */
-const STANDALONE_WOMEN_SET = new Set<string>([
-  "dresses",
-  "skirts",
+  "fashion accessories",
   "fine jewelry",
   "hair accessories",
   "eyewear",
   "loafers & boat shoes",
-  "hoodies & sweatshirts",
-  "sleepwear",
-  "sleepwear & pajamas",
-  "wedding dresses",
-  "traditional wear",
+  "jewellery",
+  "jewelry",
+  "watches",
+  "bags",
+  "shoes",
+  "socks & stockings",
+  "socks & tights",
+  // ชุดชั้นใน/ชุดนอน — ไม่ใช่กลุ่มคอนเทนต์ของเว็บนี้ (ไม่มั่นใจ = ซ่อน)
   "lingerie & underwear",
   "innerwear & underwear",
+  "sleepwear",
+  "sleepwear & pajamas",
+  "panties",
+  "bras",
+  "maternity wear",
+  "safety pants",
+  "shapewear",
+  "costumes",
+]);
+
+// ─── Allow Lists ──────────────────────────────────────────────────────────────
+
+/**
+ * หมวดหลัก "เสื้อผ้าผู้หญิง" — เมื่อเป็น cat1 ให้ผ่านทุก subcat
+ * ยกเว้น subcat ที่อยู่ใน DENY_SET (deny ตรวจก่อนเสมอ เช่น ถุงเท้า/ชุดชั้นใน)
+ */
+const CAT1_WOMEN_SET = new Set<string>([
+  "women clothes",
 ]);
 
 /**
- * Fashion Accessories subcategories ที่อนุญาต
- * ใช้เฉพาะเมื่อ cat1 = "Fashion Accessories"
+ * หมวดเสื้อผ้าแฟชั่นผู้หญิงโดยตรง — เมื่อปรากฏเป็น cat1 ให้ผ่านได้เลย
+ * (เดรส กระโปรง ชุดเซ็ต เสื้อฮู้ด/สเวตเตอร์ ชุดแต่งงาน — เป็นเสื้อผ้าทั้งหมด)
  */
-const FA_SUBCAT_SET = new Set<string>([
-  "hair accessories",
-  "fine jewelry",
-  "earrings",
-  "necklaces",
-  "bracelets",
-  "rings",
-  "eyewear",
-  "belts",
-  "women bags accessories",
+const STANDALONE_WOMEN_SET = new Set<string>([
+  "dresses",
+  "skirts",
+  "wedding dresses",
+  "hoodies & sweatshirts",
+  "sets",
+  "jumpsuits, playsuits & overalls",
 ]);
 
 // ─── Violation Sets (ใช้ตรวจสอบซ้ำหลัง filter) ───────────────────────────────
@@ -99,13 +103,11 @@ const VIOLATION_BABY_SET = new Set<string>([
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type WomenFashionRule =
-  | "cat1_women"              // cat1 ∈ Women Clothes/Bags/Shoes/Watches/Muslim Wear
-  | "standalone_women"        // cat1 ∈ Dresses/Skirts/Fine Jewelry/…
-  | "fashion_accessories_sub" // cat1 = Fashion Accessories + cat2/3 ∈ approved subcat
+  | "cat1_women"              // cat1 = Women Clothes (เสื้อผ้าผู้หญิง)
+  | "standalone_women"        // cat1 ∈ Dresses/Skirts/Sets/…
   | "denied_cat1"             // cat1 ∈ deny list
   | "denied_cat2"             // cat2 ∈ deny list
   | "denied_cat3"             // cat3 ∈ deny list
-  | "fashion_accessories_no_sub" // Fashion Accessories แต่ subcat ไม่ผ่าน
   | "not_women_fashion";      // ไม่อยู่ใน allow list ใด
 
 export type WomenFashionClassification = {
@@ -156,7 +158,7 @@ export function classifyWomenFashion(
     return {
       pass: true,
       rule: "cat1_women",
-      filterReason: `หมวดหลักผู้หญิง: ${cat1}${cat2 ? ` / ${cat2}` : ""}`,
+      filterReason: `เสื้อผ้าผู้หญิง: ${cat1}${cat2 ? ` / ${cat2}` : ""}`,
     };
   }
 
@@ -165,32 +167,11 @@ export function classifyWomenFashion(
     return {
       pass: true,
       rule: "standalone_women",
-      filterReason: `แฟชั่นผู้หญิง: ${cat1}`,
+      filterReason: `เสื้อผ้าแฟชั่นผู้หญิง: ${cat1}`,
     };
   }
 
-  // ─ Step 4: Fashion Accessories + approved subcategory ────────────────────
-  if (n1 === "fashion accessories") {
-    const matchedSub = (n2 && FA_SUBCAT_SET.has(n2))
-      ? cat2
-      : n3 && FA_SUBCAT_SET.has(n3)
-        ? cat3
-        : null;
-    if (matchedSub) {
-      return {
-        pass: true,
-        rule: "fashion_accessories_sub",
-        filterReason: `Fashion Acc. / ${matchedSub}`,
-      };
-    }
-    return {
-      pass: false,
-      rule: "fashion_accessories_no_sub",
-      filterReason: `Fashion Acc. ทั่วไป (cat2: ${cat2 || "ไม่มี"}) — ไม่ผ่าน`,
-    };
-  }
-
-  // ─ Step 5: Default deny ───────────────────────────────────────────────────
+  // ─ Step 4: Default deny ───────────────────────────────────────────────────
   return {
     pass: false,
     rule: "not_women_fashion",
@@ -303,5 +284,4 @@ export function checkMaterialViolation(
 
 export const WOMEN_FASHION_WHITELIST_COUNT = CAT1_WOMEN_SET.size + STANDALONE_WOMEN_SET.size;
 export const DENY_LIST_ITEMS = [...DENY_SET];
-export const FA_APPROVED_SUBCATS = [...FA_SUBCAT_SET];
 export const MATERIAL_DENY_CATEGORIES = [...MATERIAL_CATEGORY_DENY];

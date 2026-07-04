@@ -1,8 +1,10 @@
 import { productRepository } from "@/lib/data-source/product-repository";
-import { ProductRadarView } from "@/components/products/product-radar-view";
+import { ProductBrowseView } from "@/components/products/product-browse-view";
+
+export const dynamic = "force-dynamic";
 
 interface ProductsPageProps {
-  searchParams: Promise<{ goal?: string; range?: string }>;
+  searchParams: Promise<{ sort?: string; range?: string; goal?: string }>;
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
@@ -13,10 +15,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   ]);
 
   return (
-    <ProductRadarView
+    <ProductBrowseView
       products={products}
       lastUpdatedAt={syncStatus.lastSyncedAt}
-      initialGoal={params.goal}
+      initialSort={params.sort}
       initialRange={params.range}
     />
   );

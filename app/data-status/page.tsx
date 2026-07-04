@@ -10,6 +10,7 @@ import { ShopeeImportCard } from "@/components/data-status/shopee-import-card";
 import { ShopeeSupabaseHealthCard } from "@/components/data-status/shopee-supabase-health-card";
 import { CommissionStatusCard } from "@/components/data-status/commission-status-card";
 import { ShopeeAutoSyncCard } from "@/components/data-status/shopee-auto-sync-card";
+import { SnapshotHealthCard } from "@/components/data-status/snapshot-health-card";
 
 export default async function DataStatusPage() {
   const syncStatus = await productRepository.getDataSyncStatus();
@@ -45,6 +46,7 @@ export default async function DataStatusPage() {
       {hasShopeeFeed ? <ShopeePreviewCard /> : null}
       {hasShopeeFeed ? <ShopeeFashionPreviewCard /> : null}
       {hasShopeeFeed ? <ShopeeWomenFashionCard /> : null}
+      {hasSupabase ? <SnapshotHealthCard /> : null}
       {hasSupabase ? <ShopeeSupabaseHealthCard /> : null}
       {hasSupabase ? <CommissionStatusCard /> : null}
       {hasShopeeFeed && hasSupabase ? <ShopeeAutoSyncCard isDev={isDev} /> : null}

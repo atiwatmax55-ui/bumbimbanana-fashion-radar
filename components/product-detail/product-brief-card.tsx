@@ -20,7 +20,6 @@ function buildBrief(product: Product, commission: CommissionSnapshot | null): st
     "## ข้อมูลสินค้า",
     `- ชื่อสินค้า: ${product.productName}`,
     `- ร้านค้า: ${product.shopName}`,
-    `- หมวดสินค้า: ${product.category}`,
     `- ราคา: ${formatBaht(product.price)}`,
   ];
 
@@ -33,7 +32,7 @@ function buildBrief(product: Product, commission: CommissionSnapshot | null): st
   }
 
   lines.push(
-    `- ยอดขายสะสม (Shopee Feed): ${formatNumber(product.sales30d)} ชิ้น`,
+    `- ยอดขายสะสม (Shopee Feed): ${formatNumber(product.itemSold ?? 0)} ชิ้น`,
     `- ลิงก์สินค้า: ${product.productUrl}`,
     `- รูปสินค้า: ${product.productImage}`,
     "",
@@ -66,23 +65,24 @@ export function ProductBriefCard({ product, commission }: ProductBriefCardProps)
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border p-5">
-      <div className="flex items-center justify-between">
+      {/* หัวข้อ + ปุ่ม — stack บนมือถือ, แถวเดียวบน sm+ */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="size-4 text-muted-foreground" />
+          <FileText className="size-4 shrink-0 text-muted-foreground" />
           <h2 className="text-base font-bold text-foreground">Product Brief สำหรับ Claude Code</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 rounded-full"
+            className="flex-1 gap-1.5 rounded-full sm:flex-none"
             onClick={() => setExpanded((p) => !p)}
           >
             {expanded ? "ซ่อน" : "ดูตัวอย่าง"}
           </Button>
           <Button
             size="sm"
-            className="gap-1.5 rounded-full bg-brand-gold text-foreground hover:bg-brand-gold-hover"
+            className="flex-1 gap-1.5 rounded-full bg-brand-gold text-foreground hover:bg-brand-gold-hover sm:flex-none"
             onClick={handleCopy}
           >
             {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}

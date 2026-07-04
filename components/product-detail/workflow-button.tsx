@@ -4,10 +4,12 @@ import { useState } from "react";
 import { CheckCircle2, Clock, Send, XCircle } from "lucide-react";
 import type { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface WorkflowButtonProps {
-  productId: string;
+  productId:     string;
   initialStatus: Product["workflowStatus"];
+  className?:    string;
 }
 
 const STATUS_LABELS: Record<NonNullable<Product["workflowStatus"]>, string> = {
@@ -17,7 +19,7 @@ const STATUS_LABELS: Record<NonNullable<Product["workflowStatus"]>, string> = {
   rejected:             "ปฏิเสธแล้ว",
 };
 
-export function WorkflowButton({ productId, initialStatus }: WorkflowButtonProps) {
+export function WorkflowButton({ productId, initialStatus, className }: WorkflowButtonProps) {
   const [status, setStatus] = useState(initialStatus);
   const [loading, setLoading] = useState(false);
 
@@ -25,9 +27,9 @@ export function WorkflowButton({ productId, initialStatus }: WorkflowButtonProps
     setLoading(true);
     try {
       const res = await fetch(`/api/products/${productId}/workflow`, {
-        method: "PATCH",
+        method:  "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflow_status: newStatus }),
+        body:    JSON.stringify({ workflow_status: newStatus }),
       });
       if (res.ok) setStatus(newStatus);
     } finally {
@@ -37,8 +39,11 @@ export function WorkflowButton({ productId, initialStatus }: WorkflowButtonProps
 
   if (status === "approved_for_content") {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-positive/40 bg-positive/10 px-3 py-1.5 text-sm font-semibold text-positive">
-        <CheckCircle2 className="size-4" />
+      <div className={cn(
+        "flex items-center gap-2 rounded-full border border-positive/40 bg-positive/10 px-3 py-1.5 text-sm font-semibold text-positive",
+        className,
+      )}>
+        <CheckCircle2 className="size-4 shrink-0" />
         อนุมัติทำคอนเทนต์แล้ว
       </div>
     );
@@ -46,9 +51,9 @@ export function WorkflowButton({ productId, initialStatus }: WorkflowButtonProps
 
   if (status === "strategy_review") {
     return (
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={cn("flex flex-wrap items-center gap-2", className)}>
         <div className="flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-          <Clock className="size-4" />
+          <Clock className="size-4 shrink-0" />
           รอฝ่ายกลยุทธ์ตรวจ
         </div>
         <Button
@@ -81,7 +86,7 @@ export function WorkflowButton({ productId, initialStatus }: WorkflowButtonProps
         variant="outline"
         size="sm"
         disabled={loading}
-        className="gap-1.5 rounded-full"
+        className={cn("gap-1.5 rounded-full", className)}
         onClick={() => update("strategy_review")}
       >
         <Send className="size-3.5" />
@@ -95,7 +100,7 @@ export function WorkflowButton({ productId, initialStatus }: WorkflowButtonProps
       variant="outline"
       size="sm"
       disabled={loading}
-      className="gap-1.5 rounded-full"
+      className={cn("gap-1.5 rounded-full", className)}
       onClick={() => update("strategy_review")}
     >
       <Send className="size-3.5" />

@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Bookmark } from "lucide-react";
-import type { Product, ProductCategory } from "@/types/product";
-import { PRODUCT_CATEGORIES } from "@/types/product";
+import type { Product } from "@/types/product";
 import { useSavedProducts } from "@/hooks/use-saved-products";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataFreshnessBadge } from "@/components/shared/data-freshness-badge";
@@ -17,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
 type SavedSortKey = "savedAt" | "commission" | "sales";
 
@@ -34,7 +32,6 @@ interface SavedProductsViewProps {
 
 export function SavedProductsView({ products, lastUpdatedAt }: SavedProductsViewProps) {
   const { savedProducts, unsave } = useSavedProducts();
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [sortBy, setSortBy] = useState<SavedSortKey>("savedAt");
 
   const productMap = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
@@ -46,29 +43,19 @@ export function SavedProductsView({ products, lastUpdatedAt }: SavedProductsView
   }, [savedProducts, productMap]);
 
   const filtered = useMemo(() => {
-    let rows = joined;
-    if (categories.length > 0) {
-      rows = rows.filter((row) => categories.includes(row.product.category));
-    }
-    const sorted = [...rows];
+    const sorted = [...joined];
     switch (sortBy) {
       case "commission":
         sorted.sort((a, b) => b.product.commissionRate - a.product.commissionRate);
         break;
       case "sales":
-        sorted.sort((a, b) => b.product.sales30d - a.product.sales30d);
+        sorted.sort((a, b) => (b.product.itemSold ?? 0) - (a.product.itemSold ?? 0));
         break;
       default:
         sorted.sort((a, b) => new Date(b.entry.savedAt).getTime() - new Date(a.entry.savedAt).getTime());
     }
     return sorted;
-  }, [joined, categories, sortBy]);
-
-  function toggleCategory(category: ProductCategory) {
-    setCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-  }
+  }, [joined, sortBy]);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
@@ -94,26 +81,9 @@ export function SavedProductsView({ products, lastUpdatedAt }: SavedProductsView
       ) : (
         <>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              {PRODUCT_CATEGORIES.map((category) => {
-                const isActive = categories.includes(category);
-                return (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => toggleCategory(category)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      isActive
-                        ? "border-transparent bg-brand-gold text-foreground"
-                        : "border-border text-muted-foreground hover:bg-brand-cream hover:text-foreground"
-                    )}
-                  >
-                    {category}
-                  </button>
-                );
-              })}
-            </div>
+            <span className="text-sm text-muted-foreground">
+              บันทึกไว้ {filtered.length.toLocaleString("th-TH")} รายการ
+            </span>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SavedSortKey)}>
               <SelectTrigger className="rounded-full">
                 <SelectValue placeholder="เรียงตาม">

@@ -1,11 +1,13 @@
 import { productRepository } from "@/lib/data-source/product-repository";
-import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { HomeView } from "@/components/home/home-view";
 
-export default async function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
   const [products, syncStatus] = await Promise.all([
     productRepository.getAllProducts(),
     productRepository.getDataSyncStatus(),
   ]);
 
-  return <DashboardView products={products} lastUpdatedAt={syncStatus.lastSyncedAt} />;
+  return <HomeView products={products} lastSyncedAt={syncStatus.lastSyncedAt} />;
 }

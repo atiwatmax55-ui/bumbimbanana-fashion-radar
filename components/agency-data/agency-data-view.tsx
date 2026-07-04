@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Clock, ExternalLink } from "lucide-react";
 import type { Product } from "@/types/product";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { commissionColorClass, displayCommission, formatBaht, formatNumber } from "@/lib/utils/format";
 
@@ -144,9 +143,6 @@ function ProductAgencyCard({
       />
       <div className="flex flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className="text-[11px]">
-            {product.category}
-          </Badge>
           {currentStatus ? (
             <span
               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${WORKFLOW_COLORS[currentStatus]}`}
@@ -168,7 +164,7 @@ function ProductAgencyCard({
               {displayCommission(product)}
             </strong>
           </span>
-          <span>ยอดขายสะสม <strong className="text-foreground">{formatNumber(product.sales30d)} ชิ้น</strong></span>
+          <span>ยอดขายสะสม <strong className="text-foreground">{formatNumber(product.itemSold ?? 0)} ชิ้น</strong></span>
         </div>
 
         <div className="flex flex-wrap gap-2 pt-1">

@@ -1,30 +1,41 @@
 import type { ProductCategory } from "@/types/product";
 
+/**
+ * แปลงหมวดจาก Shopee Feed → หมวดภายในระบบ (ใช้ debug/กรองภายในเท่านั้น)
+ * กติกาเว็บ: "ห้ามแสดงชื่อหมวดสินค้าให้ผู้ใช้เห็น" — ค่านี้ต้องไม่ปรากฏบน UI
+ */
 export const SHOPEE_CAT_MAP: Record<string, ProductCategory> = {
   "dresses": "เดรส",
-  "women clothes": "เสื้อเชิ้ต",
-  "skirts": "กระโปรง",
-  "women bags": "กระเป๋า",
-  "women shoes": "รองเท้า",
-  "fine jewelry": "อื่นๆ",
-  "hair accessories": "อื่นๆ",
-  "fashion accessories": "อื่นๆ",
-  "women watches": "อื่นๆ",
-  "women muslim wear": "เสื้อเชิ้ต",
-  "lingerie & underwear": "ชุดเซ็ต",
-  "innerwear & underwear": "ชุดเซ็ต",
-  "sleepwear": "ชุดเซ็ต",
-  "sleepwear & pajamas": "ชุดเซ็ต",
-  "hoodies & sweatshirts": "เสื้อครอป",
   "wedding dresses": "เดรส",
-  "traditional wear": "อื่นๆ",
-  "eyewear": "อื่นๆ",
-  "loafers & boat shoes": "รองเท้า",
+  "skirts": "กระโปรง",
+  "sets": "ชุดเซ็ต",
+  "jumpsuits, playsuits & overalls": "ชุดเซ็ต",
+  "hoodies & sweatshirts": "เสื้อครอป",
+  "women clothes": "อื่นๆ",
 };
 
-export function mapShopeeCategory(cat1?: string | null): ProductCategory {
-  if (!cat1) return "อื่นๆ";
-  return SHOPEE_CAT_MAP[cat1.trim().toLowerCase()] ?? "อื่นๆ";
+/** หมวดย่อย (cat2) ใต้ Women Clothes → หมวดภายใน */
+export const SHOPEE_SUBCAT_MAP: Record<string, ProductCategory> = {
+  "dresses": "เดรส",
+  "skirts": "กระโปรง",
+  "sets": "ชุดเซ็ต",
+  "jumpsuits, playsuits & overalls": "ชุดเซ็ต",
+  "pants & leggings": "กางเกงขากระบอก",
+  "shorts": "กางเกงขากระบอก",
+  "jeans": "กางเกงยีนส์",
+  "tops": "เสื้อครอป",
+  "shirts & blouses": "เสื้อเชิ้ต",
+  "hoodies & sweatshirts": "เสื้อครอป",
+  "jackets, coats & vests": "เสื้อครอป",
+  "sweaters & cardigans": "เสื้อครอป",
+  "sports & activewear": "เสื้อออกกำลังกาย",
+};
+
+export function mapShopeeCategory(cat1?: string | null, cat2?: string | null): ProductCategory {
+  const n2 = (cat2 ?? "").trim().toLowerCase();
+  if (n2 && SHOPEE_SUBCAT_MAP[n2]) return SHOPEE_SUBCAT_MAP[n2];
+  const n1 = (cat1 ?? "").trim().toLowerCase();
+  return SHOPEE_CAT_MAP[n1] ?? "อื่นๆ";
 }
 
 /** คำนวณ interestScore แบบ log-scale (1–100) จากยอดขายสะสม

@@ -60,12 +60,55 @@ export interface Product {
   lastUpdatedAt: string;
   /** แหล่งข้อมูลสินค้า — ถ้าไม่มีค่า = mock / tiktok */
   source?: "shopee";
+  /** จำนวนขายสะสมตลอดอายุสินค้าจาก Shopee Feed (ไม่ใช่ยอดขายรายช่วง) */
+  itemSold?: number;
+  /** เวลาที่ระบบพบสินค้านี้ใน Feed ครั้งแรก (= created_at ในตาราง products) */
+  firstSeenAt?: string;
+  /** ตัวเลขวิเคราะห์ 7/30 วันจาก Snapshot — undefined เมื่อยังไม่ได้คำนวณ */
+  analytics?: ProductAnalytics;
   /**
    * สถานะ workflow ของสินค้านี้ในกระบวนการคัดเลือก
    * radar_found = ค้นพบจากระบบ | strategy_review = รอฝ่ายกลยุทธ์ตรวจ |
    * approved_for_content = อนุมัติทำคอนเทนต์ | rejected = ปฏิเสธ
    */
   workflowStatus?: "radar_found" | "strategy_review" | "approved_for_content" | "rejected";
+}
+
+/**
+ * ตัวเลขวิเคราะห์ต่อช่วงเวลา (7 วัน / 30 วัน) คำนวณจาก Snapshot ยอดขายสะสมรายวัน
+ * null = ข้อมูลย้อนหลังยังไม่พอสำหรับช่วงเวลานั้น (ห้ามแต่งตัวเลขแทน)
+ */
+export interface PeriodMetrics {
+  /** จำนวนชิ้นที่ขายในช่วง (item_sold ล่าสุด - item_sold ณ จุดเริ่มช่วง) */
+  units: number;
+  /** ยอดขายเป็นบาทโดยประมาณ (units × ราคาปัจจุบัน) */
+  revenue: number;
+  /** จำนวนชิ้นที่ขายในช่วงก่อนหน้า — null ถ้าข้อมูลไม่พอ */
+  prevUnits: number | null;
+  /** อัตราโต (%) เทียบช่วงก่อนหน้า — null ถ้าฐานก่อนหน้าไม่มีหรือเป็นศูนย์ */
+  growthPct: number | null;
+  /** คะแนนความมาแรง 0–100 (ยอดขาย 40% + จำนวนชิ้น 30% + อัตราโต 30%) */
+  trendScore: number | null;
+  /** อันดับยอดขาย (บาท) ในช่วงนี้ — จากข้อมูล Shopee ที่ระบบติดตาม */
+  salesRank: number | null;
+  /** อันดับความมาแรงในช่วงนี้ */
+  trendRank: number | null;
+}
+
+/** ป้าย "ควรรีบทำคอนเทนต์" — ติดเมื่ออันดับ TOP 20 และคะแนนโต ≥ 20% */
+export interface ContentBadge {
+  /** เหตุผลสั้น ๆ เช่น "อันดับมาแรง #8 • โต 27%" */
+  reason: string;
+}
+
+/** ข้อมูลวิเคราะห์รายสินค้า แยกตามช่วงเวลา */
+export interface ProductAnalytics {
+  d7: PeriodMetrics | null;
+  d30: PeriodMetrics | null;
+  badge7: ContentBadge | null;
+  badge30: ContentBadge | null;
+  /** เป็นสินค้าใหม่ (ระบบพบใน Feed ครั้งแรกภายใน 7 วัน หลังจากเริ่มเก็บข้อมูล) */
+  isNew: boolean;
 }
 
 /** สินค้าที่ถูกบันทึกไว้พร้อมโน้ตส่วนตัว สอดคล้องกับตาราง saved_products */

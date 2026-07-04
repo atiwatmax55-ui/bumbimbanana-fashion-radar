@@ -27,9 +27,8 @@ type FetchState =
   | { status: "error"; message: string };
 
 const RULE_LABEL: Record<string, string> = {
-  cat1_women: "หมวดหลักผู้หญิง",
-  standalone_women: "หมวดแฟชั่นผู้หญิง",
-  fashion_accessories_sub: "Fashion Acc. + หมวดย่อย",
+  cat1_women: "เสื้อผ้าผู้หญิง (หมวดหลัก)",
+  standalone_women: "เสื้อผ้าแฟชั่นผู้หญิง",
 };
 
 export function ShopeeWomenFashionCard() {
@@ -148,10 +147,6 @@ function ResultView({ data }: { data: WomenFashionPreviewResponse }) {
         <Stat
           label="หมวดแฟชั่นโดยตรง"
           value={filterStats.byRule.standaloneWomen.toLocaleString("th-TH")}
-        />
-        <Stat
-          label="Fashion Acc. ผ่าน subcat"
-          value={filterStats.byRule.fashionAccessoriesSub.toLocaleString("th-TH")}
         />
       </div>
 

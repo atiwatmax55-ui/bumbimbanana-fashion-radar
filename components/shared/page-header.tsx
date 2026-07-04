@@ -9,9 +9,13 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-3 border-b border-border pb-5">
       <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
-          {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="break-words text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
+            {title}
+          </h1>
+          {description ? (
+            <p className="break-words text-sm text-muted-foreground">{description}</p>
+          ) : null}
         </div>
       </div>
       {children}

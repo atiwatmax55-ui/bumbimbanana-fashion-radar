@@ -32,11 +32,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   if (product) {
     // พบสินค้าตรง ๆ → render ทันที ห้าม redirect เด็ดขาด
-    const [commission, allProducts] = await Promise.all([
-      getLatestCommissionForProduct(product.id),
-      productRepository.getAllProducts(),
-    ]);
-    return <ProductDetailView product={product} commission={commission} allProducts={allProducts} />;
+    const commission = await getLatestCommissionForProduct(product.id);
+    return <ProductDetailView product={product} commission={commission} />;
   }
 
   // ── ขั้นที่ 2: ไม่พบ → ลอง legacy numeric URL ─────────────────────────────

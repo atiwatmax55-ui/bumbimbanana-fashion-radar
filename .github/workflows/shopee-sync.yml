@@ -1,0 +1,30 @@
+# ซิงก์ Shopee Feed ทุก 6 ชั่วโมง — ใช้แทน Vercel Cron ที่แพ็กเกจฟรีรองรับแค่วันละครั้ง
+# (Vercel Cron รายวันเวลา 00:30 UTC ยังทำงานอยู่เป็น baseline — endpoint กันซ้ำด้วย
+#  snapshot 1 แถว/สินค้า/วัน จึงเรียกซ้ำได้อย่างปลอดภัย)
+#
+# ต้องตั้ง GitHub Secrets ก่อน workflow นี้จึงจะทำงาน:
+#   CRON_SECRET — ค่าเดียวกับ CRON_SECRET บน Vercel
+#   SYNC_URL    — https://<โดเมนโปรดักชัน>/api/shopee/sync
+name: shopee-sync
+on:
+  schedule:
+    - cron: "30 3,9,15,21 * * *"   # ทุก 6 ชม. (UTC) = 10:30 / 16:30 / 22:30 / 04:30 เวลาไทย
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: เรียก endpoint ซิงก์ (ไม่พิมพ์ค่า Secret)
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ] || [ -z "${{ secrets.SYNC_URL }}" ]; then
+            echo "ยังไม่ได้ตั้ง GitHub Secrets (CRON_SECRET / SYNC_URL) — ข้ามรอบนี้"
+            exit 0
+          fi
+          code=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SYNC_URL }}")
+          echo "HTTP $code"
+          # แสดงเฉพาะฟิลด์สรุป ไม่ dump ทั้ง response
+          python3 -c "import json;d=json.load(open('/tmp/resp.json'));print({k:d.get(k) for k in ('added','updated','skipped','failed','syncedAt','error')})" || true
+          [ "$code" = "200" ]
