@@ -187,12 +187,25 @@ export function computeAnalytics(
     ? new Date(systemBaselineAt).getTime() + 24 * 3600 * 1000
     : null;
 
+  // วันที่มีสินค้า "พบครั้งแรก" เป็นชุดใหญ่ = วันเปลี่ยนตัวกรอง/ตั้งฐานข้อมูลใหม่
+  // ไม่ใช่สินค้าเพิ่งเปิดขายจริง — ห้ามติดป้าย "สินค้าใหม่" ให้ทั้งชุด
+  const firstSeenDateCount = new Map<string, number>();
+  for (const p of products) {
+    const d = p.firstSeenAt.slice(0, 10);
+    firstSeenDateCount.set(d, (firstSeenDateCount.get(d) ?? 0) + 1);
+  }
+  const bulkThreshold = Math.max(50, Math.floor(products.length * 0.2));
+  const bulkDates = new Set(
+    [...firstSeenDateCount.entries()].filter(([, c]) => c >= bulkThreshold).map(([d]) => d),
+  );
+
   const byProductId = new Map<number, ProductAnalytics>(
     products.map((p) => {
       const firstSeen = new Date(p.firstSeenAt).getTime();
       const isNew =
         Number.isFinite(firstSeen) &&
         firstSeen >= sevenDaysAgo &&
+        !bulkDates.has(p.firstSeenAt.slice(0, 10)) &&
         (baselineCutoff === null || firstSeen > baselineCutoff);
       const d7 = d7Map.get(p.productId) ?? null;
       const d30 = d30Map.get(p.productId) ?? null;
