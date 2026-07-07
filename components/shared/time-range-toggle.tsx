@@ -12,7 +12,7 @@ interface TimeRangeToggleProps {
 export function TimeRangeToggle({ value, onChange }: TimeRangeToggleProps) {
   return (
     <div
-      className="inline-flex rounded-full border border-border bg-background p-1"
+      className="inline-flex items-stretch border border-border bg-background"
       role="group"
       aria-label="เลือกช่วงเวลา"
     >
@@ -24,8 +24,8 @@ export function TimeRangeToggle({ value, onChange }: TimeRangeToggleProps) {
             type="button"
             onClick={() => onChange(range)}
             className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-              isActive ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              "px-4 py-2 text-xs font-bold tracking-wide transition-colors duration-200",
+              isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             )}
             aria-pressed={isActive}
           >

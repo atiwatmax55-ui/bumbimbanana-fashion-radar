@@ -8,6 +8,11 @@ import { formatThaiDateTime } from "@/lib/utils/format";
 import { useSavedProducts } from "@/hooks/use-saved-products";
 import { ProductCard } from "@/components/shared/product-card";
 import { TimeRangeToggle } from "@/components/shared/time-range-toggle";
+import {
+  PlatformSwitch,
+  filterByPlatform,
+  type PlatformKey,
+} from "@/components/shared/platform-switch";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -57,11 +62,14 @@ export function ProductBrowseView({
   );
   const [query, setQuery] = useState("");
   const [chip, setChip] = useState<ChipKey>("all");
+  const [platform, setPlatform] = useState<PlatformKey>("all");
   const { isSaved } = useSavedProducts();
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = products.filter((p) => !q || p.productName.toLowerCase().includes(q));
+    let list = filterByPlatform(products, platform).filter(
+      (p) => !q || p.productName.toLowerCase().includes(q),
+    );
 
     switch (chip) {
       case "urgent":
@@ -105,17 +113,23 @@ export function ProductBrowseView({
       default:
         return [...list].sort((a, b) => (b.itemSold ?? 0) - (a.itemSold ?? 0));
     }
-  }, [products, query, chip, sortBy, range, isSaved]);
+  }, [products, query, chip, sortBy, range, isSaved, platform]);
 
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 md:px-8 md:py-10">
-      <div className="flex flex-col gap-2 border-b border-border pb-6">
-        <h1 className="font-display text-3xl font-semibold text-foreground">เลือกดูสินค้า</h1>
-        <p className="text-sm text-muted-foreground">
-          เสื้อผ้าแฟชั่นผู้หญิงจาก Shopee Thailand ทั้งหมดที่ระบบติดตาม — ข้อมูลล่าสุด{" "}
-          {formatThaiDateTime(lastUpdatedAt)}
+      <div className="flex flex-col gap-3 border-b border-border pb-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-muted-foreground">
+          Live Product Intelligence
         </p>
+        <h1 className="font-display text-4xl leading-none text-foreground sm:text-6xl">
+          Hot Product Radar
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          สินค้าที่มีสัญญาณขายดี ค่าคอมสูง และเหมาะกับการทำคอนเทนต์ — เสื้อผ้าแฟชั่นผู้หญิงจาก
+          Shopee Thailand ที่ระบบติดตาม • ข้อมูลล่าสุด {formatThaiDateTime(lastUpdatedAt)}
+        </p>
+        <PlatformSwitch value={platform} onChange={setPlatform} className="w-fit" />
       </div>
 
       {/* แถวควบคุม: ค้นหา + ช่วงเวลา + เรียง */}
@@ -126,14 +140,14 @@ export function ProductBrowseView({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ค้นหาชื่อสินค้า…"
-            className="rounded-full pl-10"
+            className="rounded-none pl-10"
             aria-label="ค้นหาชื่อสินค้า"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <TimeRangeToggle value={range} onChange={setRange} />
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as BrowseSortKey)}>
-            <SelectTrigger className="rounded-full">
+            <SelectTrigger className="rounded-none">
               <SelectValue placeholder="เรียงข้อมูล">
                 {(v: BrowseSortKey) =>
                   `เรียงตาม: ${SORT_OPTIONS.find((o) => o.value === v)?.label ?? ""}`
@@ -158,10 +172,10 @@ export function ProductBrowseView({
             key={key}
             type="button"
             onClick={() => setChip(key)}
-            className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+            className={`border px-3.5 py-1.5 text-xs font-bold tracking-wide transition-colors ${
               chip === key
-                ? "border-transparent bg-foreground text-background"
-                : "border-border text-muted-foreground hover:bg-brand-cream hover:text-foreground"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
             }`}
           >
             {CHIP_LABELS[key]}
@@ -179,10 +193,14 @@ export function ProductBrowseView({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-2 rounded-3xl border border-dashed border-border bg-brand-cream/40 px-6 py-16 text-center">
-          <p className="text-sm font-semibold text-foreground">ไม่พบสินค้าที่ตรงกับเงื่อนไข</p>
+        <div className="flex flex-col items-center gap-2 border border-dashed border-border bg-secondary px-6 py-16 text-center">
+          <p className="font-display text-lg text-foreground">
+            {platform === "tiktok" ? "TikTok Shop ยังไม่เชื่อมต่อ" : "ไม่พบสินค้าที่ตรงกับเงื่อนไข"}
+          </p>
           <p className="text-xs text-muted-foreground">
-            ลองล้างคำค้นหา เปลี่ยนตัวกรอง หรือรอรอบซิงก์ข้อมูลถัดไป
+            {platform === "tiktok"
+              ? "โครงสร้างระบบเตรียมไว้แล้ว — เมื่อเชื่อมต่อแหล่งข้อมูลจริง สินค้าจะแสดงที่นี่อัตโนมัติ"
+              : "ลองล้างคำค้นหา เปลี่ยนตัวกรอง หรือรอรอบซิงก์ข้อมูลถัดไป"}
           </p>
         </div>
       )}

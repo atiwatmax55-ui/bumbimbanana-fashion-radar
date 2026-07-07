@@ -9,12 +9,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-sans);
-  --font-display: var(--font-display-latin), var(--font-display-thai), serif;
+  --font-display: var(--font-display-latin), var(--font-sans), sans-serif;
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --color-brand-gold: var(--brand-gold);
   --color-brand-gold-hover: var(--brand-gold-hover);
   --color-brand-cream: var(--brand-cream);
+  --color-brand-lime: var(--brand-lime);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -55,42 +56,46 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1a1a1a;
+  --foreground: #111111;
   --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --card-foreground: #111111;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #c9a877;
-  --primary-foreground: #1a1a1a;
-  --secondary: #f8f4ec;
-  --secondary-foreground: #1a1a1a;
-  --muted: #f8f4ec;
-  --muted-foreground: #6b6b6b;
-  --accent: #f8f4ec;
-  --accent-foreground: #1a1a1a;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #111111;
+  --muted: #f5f5f5;
+  --muted-foreground: #707070;
+  --accent: #f5f5f5;
+  --accent-foreground: #111111;
   --destructive: #b5564b;
-  --border: #e5e1d8;
-  --input: #e5e1d8;
-  --ring: #c9a877;
-  --chart-1: #c9a877;
-  --chart-2: #1a1a1a;
-  --chart-3: #3e7a5b;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #111111;
+  --chart-1: #111111;
+  --chart-2: #707070;
+  --chart-3: #d9ff00;
   --chart-4: #b5564b;
-  --chart-5: #6b6b6b;
-  --radius: 1rem;
-  --positive: #3e7a5b;
+  --chart-5: #a3a3a3;
+  --radius: 0.375rem;
+  --positive: #2f6b4f;
   --negative: #b5564b;
-  --brand-gold: #c9a877;
-  --brand-gold-hover: #b6924f;
-  --brand-cream: #f8f4ec;
-  --sidebar: #f8f4ec;
-  --sidebar-foreground: #1a1a1a;
-  --sidebar-primary: #c9a877;
-  --sidebar-primary-foreground: #1a1a1a;
-  --sidebar-accent: #f0ead9;
-  --sidebar-accent-foreground: #1a1a1a;
-  --sidebar-border: #e5e1d8;
-  --sidebar-ring: #c9a877;
+  /* token ชื่อเดิมถูก remap เป็นธีมใหม่ เพื่อไม่ต้องแก้ component ที่อ้างชื่อนี้อยู่:
+     brand-gold → Lime accent (พื้น/จุดเน้น), brand-gold-hover → ดำ (ตัวอักษรเน้น),
+     brand-cream → เทาอ่อน */
+  --brand-gold: #d9ff00;
+  --brand-gold-hover: #111111;
+  --brand-cream: #f5f5f5;
+  --brand-lime: #d9ff00;
+  --sidebar: #f5f5f5;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #111111;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ececec;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #111111;
 }
 
 @layer base {
@@ -109,6 +114,52 @@
 }
 
 /* หัวเรื่องแนว Fashion Editorial — serif พรีเมียม อ่านง่ายทั้งไทย/อังกฤษ */
+/* หัวข้อใหญ่แนว Sport-Luxury: Anton สำหรับอังกฤษ, Noto Sans Thai สำหรับไทย */
 .font-display {
-  font-family: var(--font-display-latin), var(--font-display-thai), "Noto Serif Thai", serif;
+  font-family: var(--font-display-latin), var(--font-sans), sans-serif;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+/* ── Micro interactions (CSS ล้วน ไม่เพิ่ม library) ── */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-x 40s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee, .animate-fade-up { animation: none; }
+}
+
+/* เส้นใต้เมนูแบบแบรนด์แฟชั่น */
+.nav-underline {
+  position: relative;
+}
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.nav-underline:hover::after,
+.nav-underline[data-active="true"]::after {
+  transform: scaleX(1);
 }

@@ -11,6 +11,7 @@ import { useSavedProducts } from "@/hooks/use-saved-products";
 import { DataFreshnessBadge } from "@/components/shared/data-freshness-badge";
 import { SaveProductButton } from "@/components/shared/save-product-button";
 import { TimeRangeToggle } from "@/components/shared/time-range-toggle";
+import { RadarScore } from "@/components/shared/radar-score";
 import { Button } from "@/components/ui/button";
 import { PersonalNoteCard } from "@/components/product-detail/personal-note-card";
 import { CommissionCard } from "@/components/product-detail/commission-card";
@@ -162,8 +163,8 @@ export function ProductDetailView({ product, commission }: ProductDetailViewProp
             }
           />
           <StatBlock
-            label="คะแนนความมาแรง"
-            value={metrics.trendScore !== null ? `${metrics.trendScore} คะแนน` : "ข้อมูลไม่พอ"}
+            label="RADAR SCORE (คะแนนความมาแรง)"
+            value={metrics.trendScore !== null ? `${metrics.trendScore} / 100` : "ข้อมูลไม่พอ"}
           />
         </div>
       ) : (
@@ -174,6 +175,10 @@ export function ProductDetailView({ product, commission }: ProductDetailViewProp
           </p>
         </div>
       )}
+
+      {metrics && metrics.trendScore !== null ? (
+        <RadarScore metrics={metrics} rangeLabel={rangeLabel} />
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3">
         <StatBlock

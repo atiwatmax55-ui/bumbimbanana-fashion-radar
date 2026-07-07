@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Thai, Noto_Serif_Thai, Playfair_Display } from "next/font/google";
+import { Anton, Archivo, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/layout/site-header";
+import { TopUtilityBar } from "@/components/layout/top-utility-bar";
+import { MainNavbar } from "@/components/layout/main-navbar";
 import { BottomNav } from "@/components/layout/bottom-nav";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -10,17 +11,18 @@ const notoSansThai = Noto_Sans_Thai({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-// ฟอนต์หัวเรื่องแนว Fashion Editorial — serif ไทย + ละติน
-const notoSerifThai = Noto_Serif_Thai({
-  variable: "--font-display-thai",
-  subsets: ["thai", "latin"],
-  weight: ["500", "600", "700"],
-});
-
-const playfair = Playfair_Display({
+// ฟอนต์หัวข้อใหญ่แนว Sport-Luxury (อังกฤษ) — ไทยตกไปใช้ Noto Sans Thai หนาอัตโนมัติ
+const anton = Anton({
   variable: "--font-display-latin",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400",
+});
+
+// ฟอนต์ UI ละติน — จับคู่กับ Noto Sans Thai
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -35,9 +37,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${notoSansThai.variable} ${notoSerifThai.variable} ${playfair.variable} h-full antialiased`}>
+    <html lang="th" className={`${notoSansThai.variable} ${anton.variable} ${archivo.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <SiteHeader />
+        <TopUtilityBar />
+        <MainNavbar />
         <main className="flex-1 pb-20 md:pb-0">{children}</main>
         <BottomNav />
       </body>
