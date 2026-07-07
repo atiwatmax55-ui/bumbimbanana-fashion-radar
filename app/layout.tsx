@@ -26,9 +26,19 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: "BUMBIMBANANA Fashion Product Radar",
+  metadataBase: new URL("https://bumbimbanana-fashion-radar.vercel.app"),
+  title: "BUMBIMBANANA Fashion Radar",
   description:
     "เรดาร์คัดสินค้าเสื้อผ้าแฟชั่นผู้หญิงจาก Shopee Thailand ที่กำลังมาแรง ขายดี และค่าคอมสูง สำหรับวางแผนทำคอนเทนต์ Affiliate",
+  // ไอคอน (favicon.ico / icon.png / apple-icon.png) และรูปแชร์โซเชียล
+  // (opengraph-image.png / twitter-image.png) Next.js ตรวจจับจากไฟล์ใน app/ อัตโนมัติ
+  openGraph: {
+    title: "BUMBIMBANANA Fashion Radar",
+    description:
+      "เรดาร์คัดสินค้าเสื้อผ้าแฟชั่นผู้หญิงจาก Shopee Thailand ที่กำลังมาแรง ขายดี และค่าคอมสูง",
+    siteName: "BUMBIMBANANA Fashion Radar",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
