@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product, TimeRange } from "@/types/product";
 import { badgeFor, metricsFor } from "@/lib/analytics/period-metrics";
+import { opportunityScore } from "@/lib/analytics/opportunity-score";
 import { formatBaht, formatNumber, formatPercent } from "@/lib/utils/format";
 
 interface ProductCardProps {
@@ -23,6 +24,7 @@ export function ProductCard({ product, range, rankNumber }: ProductCardProps) {
   const rangeLabel = range === "7d" ? "7 วัน" : "30 วัน";
   const hasCommission = product.commissionRate > 0 && !product.commissionStatus;
   const isRising = metrics?.growthPct !== null && metrics?.growthPct !== undefined && metrics.growthPct >= 20;
+  const opportunity = opportunityScore(product, range);
 
   return (
     <Link href={`/products/${product.id}`} className="group flex flex-col gap-3">
@@ -103,7 +105,9 @@ export function ProductCard({ product, range, rankNumber }: ProductCardProps) {
                 {" "}• {formatPercent(metrics.growthPct, true)}
               </span>
             ) : null}
-            {metrics.trendScore !== null ? (
+            {opportunity !== null && opportunity.hasCommissionData ? (
+              <span className="font-semibold text-foreground"> • น่าโปรโมท {opportunity.score}</span>
+            ) : metrics.trendScore !== null ? (
               <span className="text-foreground"> • RADAR {metrics.trendScore}</span>
             ) : null}
           </p>

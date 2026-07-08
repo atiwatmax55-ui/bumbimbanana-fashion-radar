@@ -10,6 +10,7 @@ import {
   Flame,
   Hourglass,
   Sparkles,
+  Target,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import {
   urgentProducts,
 } from "@/lib/analytics/select-products";
 import { metricsFor } from "@/lib/analytics/period-metrics";
+import { opportunityProducts } from "@/lib/analytics/opportunity-score";
 import { formatThaiDate, formatThaiDateTime } from "@/lib/utils/format";
 import { ProductCard } from "@/components/shared/product-card";
 import { TimeRangeToggle } from "@/components/shared/time-range-toggle";
@@ -49,6 +51,7 @@ export function HomeView({ products: allProducts, lastSyncedAt }: HomeViewProps)
   const sellers = useMemo(() => bestSellers(products, range), [products, range]);
   const commission = useMemo(() => topCommission(products), [products]);
   const fresh = useMemo(() => newProducts(products), [products]);
+  const opportunities = useMemo(() => opportunityProducts(products, range), [products, range]);
   const since = useMemo(() => trackingSince(allProducts), [allProducts]);
 
   // ตัวเลขจริงทั้งหมด — ห้าม hardcode
@@ -234,6 +237,26 @@ export function HomeView({ products: allProducts, lastSyncedAt }: HomeViewProps)
               />
             )}
           </section>
+
+          {/* ═══ OPPORTUNITY SCORE — น่าโปรโมทวันนี้ ═══ */}
+          <HomeSection
+            icon={<Target className="size-4" />}
+            title="น่าโปรโมทวันนี้"
+            subtitle={`Opportunity Score (คะแนนน่าโปรโมท) = ความมาแรงช่วง ${rangeLabel} 60% + ค่าคอมจริง 40% — สินค้าที่ยังไม่มีข้อมูลค่าคอมใช้ความมาแรงอย่างเดียว`}
+            href={`/products?sort=trend&range=${range}`}
+            empty={
+              opportunities.length === 0 ? (
+                <CollectingState
+                  title="กำลังเก็บข้อมูลเพื่อคำนวณคะแนนน่าโปรโมท"
+                  detail={`ต้องมี Snapshot ยอดขายครบช่วง ${rangeLabel} ก่อน — จะแสดงอัตโนมัติเมื่อข้อมูลพอ`}
+                />
+              ) : null
+            }
+          >
+            {opportunities.slice(0, 4).map(({ product: p }, i) => (
+              <ProductCard key={p.id} product={p} range={range} rankNumber={i + 1} />
+            ))}
+          </HomeSection>
 
           {/* ═══ HOT PRODUCT RADAR — 4 หัวข้อเดิม ═══ */}
           <HomeSection

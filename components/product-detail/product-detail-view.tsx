@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ArrowLeft, Check, Copy, ExternalLink, Flame, ShoppingBag } from "lucide-react";
 import type { Product, TimeRange } from "@/types/product";
 import type { CommissionSnapshot } from "@/lib/commission/types";
+import type { HistoryPoint } from "@/lib/analytics/product-history";
 import { badgeFor, metricsFor } from "@/lib/analytics/period-metrics";
 import { useSavedProducts } from "@/hooks/use-saved-products";
 import { DataFreshnessBadge } from "@/components/shared/data-freshness-badge";
@@ -17,6 +18,8 @@ import { PersonalNoteCard } from "@/components/product-detail/personal-note-card
 import { CommissionCard } from "@/components/product-detail/commission-card";
 import { WorkflowButton } from "@/components/product-detail/workflow-button";
 import { ProductBriefCard } from "@/components/product-detail/product-brief-card";
+import { SalesHistoryChart } from "@/components/product-detail/sales-history-chart";
+import { ContentGeneratorCard } from "@/components/product-detail/content-generator-card";
 import {
   commissionColorClass,
   displayCommission,
@@ -29,9 +32,11 @@ import {
 interface ProductDetailViewProps {
   product:     Product;
   commission:  CommissionSnapshot | null;
+  /** ประวัติ Snapshot รายวันสำหรับกราฟ — [] เมื่อยังไม่มีข้อมูล */
+  history?:    HistoryPoint[];
 }
 
-export function ProductDetailView({ product, commission }: ProductDetailViewProps) {
+export function ProductDetailView({ product, commission, history = [] }: ProductDetailViewProps) {
   const [range, setRange] = useState<TimeRange>("7d");
   const { isSaved, toggleSave, save, updateNote, savedProducts } = useSavedProducts();
   const saved = isSaved(product.id);
@@ -180,6 +185,8 @@ export function ProductDetailView({ product, commission }: ProductDetailViewProp
         <RadarScore metrics={metrics} rangeLabel={rangeLabel} />
       ) : null}
 
+      {product.source === "shopee" ? <SalesHistoryChart history={history} /> : null}
+
       <div className="grid grid-cols-2 gap-3">
         <StatBlock
           label="ยอดขายสะสมตลอดอายุสินค้า (จาก Shopee)"
@@ -194,6 +201,8 @@ export function ProductDetailView({ product, commission }: ProductDetailViewProp
       <CommissionCard snapshot={commission} productPrice={product.price} />
 
       <ProductBriefCard product={product} commission={commission} />
+
+      <ContentGeneratorCard product={product} />
 
       <PersonalNoteCard initialNote={currentNote} onSave={handleSaveNote} />
     </div>

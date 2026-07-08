@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bookmark } from "lucide-react";
 import type { Product } from "@/types/product";
 import { useSavedProducts } from "@/hooks/use-saved-products";
+import { useSavedChanges } from "@/hooks/use-saved-changes";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataFreshnessBadge } from "@/components/shared/data-freshness-badge";
 import { SavedProductCard } from "@/components/saved/saved-product-card";
@@ -41,6 +42,9 @@ export function SavedProductsView({ products, lastUpdatedAt }: SavedProductsView
       .map((entry) => ({ entry, product: productMap.get(entry.productId) }))
       .filter((row): row is { entry: typeof row.entry; product: Product } => Boolean(row.product));
   }, [savedProducts, productMap]);
+
+  const savedJoinedProducts = useMemo(() => joined.map((row) => row.product), [joined]);
+  const changes = useSavedChanges(savedJoinedProducts);
 
   const filtered = useMemo(() => {
     const sorted = [...joined];
@@ -107,6 +111,7 @@ export function SavedProductsView({ products, lastUpdatedAt }: SavedProductsView
                 product={product}
                 savedEntry={entry}
                 onRemove={() => unsave(product.id)}
+                change={changes.get(product.id)}
               />
             ))}
             {filtered.length === 0 ? (

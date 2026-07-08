@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Trash2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Trash2, TrendingUp } from "lucide-react";
 import type { Product, SavedProduct } from "@/types/product";
+import type { SavedChange } from "@/hooks/use-saved-changes";
 import { Button } from "@/components/ui/button";
 import { formatBaht, formatNumber, formatPercent, formatThaiDate } from "@/lib/utils/format";
 
@@ -9,12 +10,15 @@ interface SavedProductCardProps {
   product:     Product;
   savedEntry:  SavedProduct;
   onRemove:    () => void;
+  /** ความเปลี่ยนแปลงตั้งแต่เปิดหน้านี้ครั้งล่าสุด — undefined = ไม่มีอะไรเปลี่ยน */
+  change?:     SavedChange;
 }
 
 /** การ์ดสินค้าที่บันทึกไว้ แสดงโน้ตส่วนตัวและวันที่บันทึก พร้อมปุ่มดูรายละเอียด/ลบ */
-export function SavedProductCard({ product, savedEntry, onRemove }: SavedProductCardProps) {
+export function SavedProductCard({ product, savedEntry, onRemove, change }: SavedProductCardProps) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      {change ? <ChangeHighlights change={change} /> : null}
       <div className="flex gap-3">
         <Image
           src={product.productImage}
@@ -72,6 +76,44 @@ export function SavedProductCard({ product, savedEntry, onRemove }: SavedProduct
           ลบออก
         </Button>
       </div>
+    </div>
+  );
+}
+
+/** ป้ายความเปลี่ยนแปลงตั้งแต่เปิดหน้าครั้งล่าสุด — แสดงเฉพาะจุดที่เปลี่ยนจริง */
+function ChangeHighlights({ change }: { change: SavedChange }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {change.unitsGained !== undefined ? (
+        <span className="flex items-center gap-1 bg-brand-lime px-2 py-0.5 text-[11px] font-bold text-foreground">
+          <TrendingUp className="size-3" />
+          ขายเพิ่ม +{formatNumber(change.unitsGained)} ชิ้น ตั้งแต่ดูครั้งก่อน
+        </span>
+      ) : null}
+      {change.price ? (
+        change.price.now < change.price.before ? (
+          <span className="flex items-center gap-1 bg-positive/15 px-2 py-0.5 text-[11px] font-bold text-positive">
+            <ArrowDownRight className="size-3" />
+            ราคาลด {formatBaht(change.price.before)} → {formatBaht(change.price.now)}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1 bg-negative/10 px-2 py-0.5 text-[11px] font-bold text-negative">
+            <ArrowUpRight className="size-3" />
+            ราคาขึ้น {formatBaht(change.price.before)} → {formatBaht(change.price.now)}
+          </span>
+        )
+      ) : null}
+      {change.commission ? (
+        <span
+          className={`flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold ${
+            change.commission.now >= change.commission.before
+              ? "bg-positive/15 text-positive"
+              : "bg-negative/10 text-negative"
+          }`}
+        >
+          ค่าคอม {formatPercent(change.commission.before)} → {formatPercent(change.commission.now)}
+        </span>
+      ) : null}
     </div>
   );
 }

@@ -83,7 +83,13 @@ export function displayCommission(product: {
   if (product.commissionRate > 0 && !product.commissionStatus) {
     return formatPercent(product.commissionRate);
   }
-  return product.commissionStatus ?? "รอข้อมูลค่าคอมจาก Shopee Affiliate";
+  const status = product.commissionStatus;
+  // สถานะจากฐานข้อมูลอาจเป็นรหัสเครื่อง (ASCII ล้วน เช่น "not_available_from_feed")
+  // — ห้ามแสดงตรง ๆ บนหน้าเว็บ ให้ใช้ข้อความไทยมาตรฐานแทน
+  if (!status || /^[\x00-\x7F]+$/.test(status)) {
+    return "รอข้อมูลค่าคอมจาก Shopee Affiliate";
+  }
+  return status;
 }
 
 /** คืนค่า CSS class สีสำหรับค่าคอมมิชชัน: มีข้อมูลจริง = ทอง, ยังไม่มี = muted */

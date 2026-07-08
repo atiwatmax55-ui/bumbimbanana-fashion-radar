@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { productRepository } from "@/lib/data-source/product-repository";
 import { getLatestCommissionForProduct } from "@/lib/commission/server";
+import { fetchProductHistory } from "@/lib/analytics/product-history";
 import { ProductDetailView } from "@/components/product-detail/product-detail-view";
 
 interface ProductDetailPageProps {
@@ -32,8 +33,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   if (product) {
     // พบสินค้าตรง ๆ → render ทันที ห้าม redirect เด็ดขาด
-    const commission = await getLatestCommissionForProduct(product.id);
-    return <ProductDetailView product={product} commission={commission} />;
+    const [commission, history] = await Promise.all([
+      getLatestCommissionForProduct(product.id),
+      fetchProductHistory(product.id),
+    ]);
+    return <ProductDetailView product={product} commission={commission} history={history} />;
   }
 
   // ── ขั้นที่ 2: ไม่พบ → ลอง legacy numeric URL ─────────────────────────────

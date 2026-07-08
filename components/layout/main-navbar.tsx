@@ -19,7 +19,8 @@ import {
  */
 const MENU = [
   { href: "/", label: "RADAR", thai: "หน้าแรก" },
-  { href: "/products?sort=trend&range=7d", label: "TREND DROP", thai: "มาแรง" },
+  { href: "/trending", label: "TREND DROP", thai: "มาแรงวันนี้" },
+  { href: "/compare", label: "COMPARE", thai: "เปรียบเทียบ" },
   { href: "/products", label: "SHOPEE", thai: "สินค้า Shopee" },
   { href: "/data-status", label: "TIKTOK SHOP", thai: "ยังไม่เชื่อมต่อ" },
   { href: "/#content-ideas", label: "CONTENT IDEAS", thai: "ไอเดียคอนเทนต์" },
