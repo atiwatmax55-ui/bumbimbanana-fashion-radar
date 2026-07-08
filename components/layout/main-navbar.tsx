@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bookmark, Menu, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,14 +48,16 @@ export function MainNavbar() {
       )}
     >
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
-        {/* Brand + Monogram (ตัวอักษรล้วน — ไม่ใช้ asset แบรนด์อื่น) */}
+        {/* Brand — โลโก้จริงของแบรนด์ (monogram) + wordmark */}
         <Link href="/" className="flex items-center gap-2.5">
-          <span
-            aria-hidden
-            className="font-display flex size-9 items-center justify-center bg-foreground text-lg leading-none text-brand-lime"
-          >
-            B/
-          </span>
+          <Image
+            src="/brand-mark.png"
+            alt="BUMBIMBANANA Fashion Radar"
+            width={40}
+            height={40}
+            priority
+            className="size-9 shrink-0 object-contain"
+          />
           <span className="flex flex-col leading-none">
             <span className="font-display text-lg tracking-wide text-foreground">BUMBIMBANANA</span>
             <span className="text-[9px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">
@@ -113,8 +116,15 @@ export function MainNavbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72 p-0">
               <SheetHeader className="border-b border-border px-5 py-4">
-                <SheetTitle className="font-display text-left text-base text-foreground">
-                  BUMBIMBANANA
+                <SheetTitle className="flex items-center gap-2.5 text-left">
+                  <Image
+                    src="/brand-mark.png"
+                    alt="BUMBIMBANANA Fashion Radar"
+                    width={32}
+                    height={32}
+                    className="size-8 shrink-0 object-contain"
+                  />
+                  <span className="font-display text-base text-foreground">BUMBIMBANANA</span>
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col p-3">
