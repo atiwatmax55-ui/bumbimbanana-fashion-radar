@@ -5,7 +5,7 @@ import { formatThaiDateTime } from "@/lib/utils/format";
 interface DataFreshnessBadgeProps {
   lastUpdatedAt: string;
   /** แหล่งข้อมูล — ถ้าไม่ระบุจะแสดง "Mock Data" (safe default สำหรับ dev/test) */
-  source?: "shopee" | "windsor" | "mock";
+  source?: "shopee" | "windsor" | "mock" | "tiktok";
   className?: string;
 }
 
@@ -19,6 +19,11 @@ const SOURCE_CONFIG = {
     label: "Windsor.ai (TikTok Shop)",
     icon: FlaskConical,
     className: "bg-brand-cream text-foreground border-border",
+  },
+  tiktok: {
+    label: "TikTok Shop (นำเข้าด้วยมือ)",
+    icon: ShoppingBag,
+    className: "bg-brand-gold/10 text-brand-gold-hover border-brand-gold/30",
   },
   mock: {
     label: "Mock Data (ข้อมูลตัวอย่าง)",

@@ -58,8 +58,8 @@ export interface Product {
   /** อันดับการเติบโต (1 = เติบโตเร็วที่สุดในระบบ) */
   growthRank: number;
   lastUpdatedAt: string;
-  /** แหล่งข้อมูลสินค้า — ถ้าไม่มีค่า = mock / tiktok */
-  source?: "shopee";
+  /** แหล่งข้อมูลสินค้า — ถ้าไม่มีค่า = mock */
+  source?: "shopee" | "tiktok";
   /** จำนวนขายสะสมตลอดอายุสินค้าจาก Shopee Feed (ไม่ใช่ยอดขายรายช่วง) */
   itemSold?: number;
   /** เวลาที่ระบบพบสินค้านี้ใน Feed ครั้งแรก (= created_at ในตาราง products) */

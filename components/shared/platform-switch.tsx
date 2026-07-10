@@ -16,10 +16,7 @@ interface PlatformSwitchProps {
   className?: string;
 }
 
-/**
- * Segmented Control เลือกแพลตฟอร์ม — กรองด้วยฟิลด์ source จริงของสินค้า
- * TikTok Shop ยังไม่มีข้อมูล (โครงสร้างเตรียมไว้) — เลือกได้แต่จะเห็น empty state ตามจริง
- */
+/** Segmented Control เลือกแพลตฟอร์ม — กรองด้วยฟิลด์ source จริงของสินค้า */
 export function PlatformSwitch({ value, onChange, className }: PlatformSwitchProps) {
   return (
     <div
@@ -50,12 +47,11 @@ export function PlatformSwitch({ value, onChange, className }: PlatformSwitchPro
   );
 }
 
-/** กรองสินค้าตามแพลตฟอร์มจากฟิลด์ source จริง (mock/tiktok เดิม = ไม่มี source) */
-export function filterByPlatform<T extends { source?: "shopee" }>(
+/** กรองสินค้าตามแพลตฟอร์มจากฟิลด์ source จริง (mock data เดิม = ไม่มี source) */
+export function filterByPlatform<T extends { source?: "shopee" | "tiktok" }>(
   products: T[],
   platform: PlatformKey,
 ): T[] {
   if (platform === "all") return products;
-  if (platform === "shopee") return products.filter((p) => p.source === "shopee");
-  return products.filter((p) => (p.source as string | undefined) === "tiktok");
+  return products.filter((p) => p.source === platform);
 }
