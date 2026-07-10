@@ -6,8 +6,8 @@
  * แล้วตามด้วย extractRows(remainder, true) เพื่อจบ
  */
 
-/** แปลง CSV row text เดียวเป็น array ของ field values */
-export function parseRow(line: string): string[] {
+/** แปลง CSV row text เดียวเป็น array ของ field values (delimiter ปรับได้ — ค่าเริ่มต้น comma) */
+export function parseRow(line: string, delimiter = ","): string[] {
   const fields: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -23,7 +23,7 @@ export function parseRow(line: string): string[] {
       }
     } else {
       if (ch === '"') { inQuotes = true; }
-      else if (ch === ',') { fields.push(current); current = ""; }
+      else if (ch === delimiter) { fields.push(current); current = ""; }
       else { current += ch; }
     }
   }
