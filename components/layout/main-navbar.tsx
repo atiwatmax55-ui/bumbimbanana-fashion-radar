@@ -16,14 +16,14 @@ import {
 
 /**
  * เมนูหลัก — ทุกลิงก์ชี้ route/section ที่มีข้อมูลจริงเท่านั้น
- * TIKTOK SHOP ยังไม่เชื่อมต่อ → พาไปหน้าสถานะระบบ (ไม่หลอกว่ามีข้อมูล)
+ * TIKTOK SHOP พาไปหน้าแรกพร้อมเลือกแท็บ TIKTOK ให้อัตโนมัติ (นำเข้าสินค้าได้ที่ /tiktok-import)
  */
 const MENU = [
   { href: "/", label: "RADAR", thai: "หน้าแรก" },
   { href: "/trending", label: "TREND DROP", thai: "มาแรงวันนี้" },
   { href: "/compare", label: "COMPARE", thai: "เปรียบเทียบ" },
   { href: "/products", label: "SHOPEE", thai: "สินค้า Shopee" },
-  { href: "/data-status", label: "TIKTOK SHOP", thai: "ยังไม่เชื่อมต่อ" },
+  { href: "/?platform=tiktok", label: "TIKTOK SHOP", thai: "สินค้า TikTok" },
   { href: "/#content-ideas", label: "CONTENT IDEAS", thai: "ไอเดียคอนเทนต์" },
   { href: "/data-status", label: "PERFORMANCE", thai: "สถานะระบบ" },
 ] as const;
@@ -148,6 +148,9 @@ export function MainNavbar() {
                   </Link>
                   <Link href="/commission-import" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
                     นำเข้าค่าคอมมิชชัน
+                  </Link>
+                  <Link href="/tiktok-import" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
+                    นำเข้าสินค้า TikTok
                   </Link>
                   <Link href="/data-status" onClick={() => setOpen(false)} className="block px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground">
                     สถานะระบบ
