@@ -65,7 +65,12 @@ export function ImportResultSummary({ result, onReset }: ImportResultSummaryProp
         >
           นำเข้าเพิ่มเติม
         </Button>
-        <Button variant="outline" className="rounded-full" render={<Link href="/?platform=tiktok" />}>
+        <Button
+          variant="outline"
+          className="rounded-full"
+          render={<Link href="/?platform=tiktok" />}
+          nativeButton={false}
+        >
           ไปดูสินค้า TikTok ที่หน้าแรก
           <ArrowRight className="size-4" />
         </Button>

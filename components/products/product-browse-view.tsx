@@ -195,11 +195,11 @@ export function ProductBrowseView({
       ) : (
         <div className="flex flex-col items-center gap-2 border border-dashed border-border bg-secondary px-6 py-16 text-center">
           <p className="font-display text-lg text-foreground">
-            {platform === "tiktok" ? "TikTok Shop ยังไม่เชื่อมต่อ" : "ไม่พบสินค้าที่ตรงกับเงื่อนไข"}
+            {platform === "tiktok" ? "ไม่พบสินค้า TikTok ที่ตรงกับเงื่อนไข" : "ไม่พบสินค้าที่ตรงกับเงื่อนไข"}
           </p>
           <p className="text-xs text-muted-foreground">
             {platform === "tiktok"
-              ? "โครงสร้างระบบเตรียมไว้แล้ว — เมื่อเชื่อมต่อแหล่งข้อมูลจริง สินค้าจะแสดงที่นี่อัตโนมัติ"
+              ? "ลองล้างคำค้นหาหรือตัวกรอง หรือนำเข้าสินค้าเพิ่มที่หน้า “นำเข้าสินค้า TikTok”"
               : "ลองล้างคำค้นหา เปลี่ยนตัวกรอง หรือรอรอบซิงก์ข้อมูลถัดไป"}
           </p>
         </div>

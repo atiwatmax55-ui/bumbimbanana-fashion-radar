@@ -211,11 +211,11 @@ export function HomeView({ products: allProducts, lastSyncedAt }: HomeViewProps)
         </div>
       </section>
 
-      {platform === "tiktok" ? (
+      {platform === "tiktok" && products.length === 0 ? (
         <div className="mx-auto w-full max-w-7xl px-4 py-16 md:px-8">
           <CollectingState
-            title="TikTok Shop ยังไม่เชื่อมต่อ"
-            detail="โครงสร้างระบบรองรับ TikTok Shop เตรียมไว้แล้ว แต่ยังไม่มีแหล่งข้อมูลที่เชื่อมต่อได้จริง — เมื่อเชื่อมต่อสำเร็จ สินค้าจะแสดงที่นี่อัตโนมัติ"
+            title="ยังไม่มีสินค้า TikTok ในระบบ"
+            detail="นำเข้าสินค้าที่คัดจากศูนย์ครีเอเตอร์ TikTok Shop ได้ที่หน้า “นำเข้าสินค้า TikTok” — สินค้าจะแสดงที่นี่ทันทีหลังนำเข้าสำเร็จ"
           />
         </div>
       ) : (
@@ -383,14 +383,14 @@ export function HomeView({ products: allProducts, lastSyncedAt }: HomeViewProps)
             Watch
           </h2>
           <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-            เตรียมไว้สำหรับติดตามสินค้าที่กำลังไวรัล — ยังไม่เชื่อมต่อแหล่งข้อมูลจริง
-            สถานะการเชื่อมต่อดูได้ที่หน้าสถานะระบบ
+            ติดตามสินค้า TikTok ที่คัดมาด้วยมือจากศูนย์ครีเอเตอร์ (Creator Center) ของคุณเอง —
+            นำเข้าเพิ่มได้ทุกเมื่อ
           </p>
           <Link
-            href="/data-status"
+            href="/tiktok-import"
             className="mt-2 flex items-center gap-2 border border-foreground px-6 py-3 text-xs font-bold tracking-[0.1em] text-foreground transition-colors hover:bg-foreground hover:text-background"
           >
-            ดูสถานะการเชื่อมต่อ
+            นำเข้าสินค้า TikTok
             <ArrowUpRight className="size-4" />
           </Link>
         </div>
