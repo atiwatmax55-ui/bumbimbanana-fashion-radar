@@ -122,7 +122,7 @@ export function HomeView({ products: allProducts, lastSyncedAt }: HomeViewProps)
           </p>
           <p className="max-w-xl text-sm leading-relaxed text-background/70">
             วิเคราะห์สินค้า ค่าคอมมิชชัน ราคา ความแรงของเทรนด์ และโอกาสสร้างคอนเทนต์
-            จาก Shopee Thailand ในที่เดียว (โครงสร้างรองรับ TikTok Shop เตรียมไว้แล้ว)
+            จาก Shopee Thailand และ TikTok Shop (นำเข้าด้วยมือ) ในที่เดียว
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
