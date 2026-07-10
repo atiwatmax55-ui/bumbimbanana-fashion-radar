@@ -16,9 +16,12 @@ import {
   type BaselineRow,
 } from "@/lib/analytics/period-metrics";
 
-// ─── Row type จาก public.products (source_platform = 'shopee') ────────────────
+// ─── Row type จาก public.products (source_platform IN ('shopee', 'tiktok')) ───
+// ชื่อไฟล์/ตัวแปรยังใช้คำว่า "shopee" ตามเดิม (repository นี้อ่านทั้งสองแพลตฟอร์ม
+// ตาม Repository Pattern เดียวกัน — ดู ROADMAP.md แผนเชื่อม TikTok Shop T1)
 type ShopeeProductRow = {
   id:                 number;
+  source_platform:    string;
   title:              string | null;
   product_name:       string | null;
   product_image:      string | null;
@@ -30,6 +33,7 @@ type ShopeeProductRow = {
   category_level_3:   string | null;
   price:              number | null;
   item_sold:          number;
+  commission_rate:    number | null;
   commission_status:  string | null;
   interest_score:     number | null;
   created_at:         string | null;
@@ -38,9 +42,9 @@ type ShopeeProductRow = {
 };
 
 const SHOPEE_SELECT =
-  "id, title, product_name, product_image, product_url, shop_name, " +
+  "id, source_platform, title, product_name, product_image, product_url, shop_name, " +
   "category, category_level_1, category_level_2, category_level_3, " +
-  "price, item_sold, commission_status, interest_score, " +
+  "price, item_sold, commission_rate, commission_status, interest_score, " +
   "created_at, updated_at, workflow_status";
 
 // ─── Cache ระดับ module (อายุสั้น) — ลดจำนวน query ต่อ 1 page render ───────────
@@ -87,10 +91,12 @@ async function fetchBaselines(
   return (data ?? []) as BaselineRow[];
 }
 
-// ─── กรองซ้ำตอนอ่าน: เสื้อผ้าผู้หญิงเท่านั้น ─────────────────────────────────
+// ─── กรองซ้ำตอนอ่าน: เสื้อผ้าผู้หญิงเท่านั้น (เฉพาะ shopee) ────────────────────
 // ข้อมูลเดิมใน Supabase อาจ import มาด้วยตัวกรองรุ่นเก่า (มีรองเท้า/กระเป๋า)
 // จึงต้อง re-classify ทุกครั้งที่อ่าน — สินค้าไม่ผ่านถูกซ่อน (ไม่ลบข้อมูล)
+// สินค้า tiktok คัดด้วยมือแล้วและหมวดไม่ตรง taxonomy ของ Shopee — ห้ามใช้ filter นี้กรอง
 function passesWomenApparelFilter(row: ShopeeProductRow): boolean {
+  if (row.source_platform !== "shopee") return true;
   const cat1 = row.category_level_1 ?? "";
   const cat2 = row.category_level_2 ?? "";
   const cat3 = row.category_level_3 ?? "";
@@ -106,6 +112,7 @@ function mapRow(row: ShopeeProductRow): Product {
   const price = Math.max(0, Number(row.price) || 0);
   const name = (row.title || row.product_name || "").trim() || "—";
   const category = (row.category || "อื่นๆ") as ProductCategory;
+  const isTiktok = row.source_platform === "tiktok";
 
   return {
     id:            String(row.id),
@@ -115,8 +122,12 @@ function mapRow(row: ShopeeProductRow): Product {
     productUrl:    row.product_url ?? "#",
     category,
     price,
-    commissionRate:   0,
-    commissionStatus: row.commission_status ?? "รอข้อมูลค่าคอมจาก Shopee Affiliate",
+    // tiktok: ค่าคอมจริงที่เจ้าของเว็บกรอกเอง อยู่ในคอลัมน์นี้ตรง ๆ ไม่ผ่าน commission_snapshots
+    // shopee: ยังไม่มีข้อมูลจนกว่า commissionMap (จาก commission_snapshots) จะเจอในภายหลัง
+    commissionRate:   isTiktok ? Math.max(0, Number(row.commission_rate) || 0) : 0,
+    commissionStatus: isTiktok
+      ? undefined
+      : (row.commission_status ?? "รอข้อมูลค่าคอมจาก Shopee Affiliate"),
     // ค่าเริ่มต้น 0 = ยังไม่มีข้อมูลช่วงเวลา — ห้ามใช้ยอดสะสมแทน
     sales7d:       0,
     sales30d:      0,
@@ -127,7 +138,7 @@ function mapRow(row: ShopeeProductRow): Product {
     commissionRank: 0,
     growthRank:    0,
     lastUpdatedAt: row.updated_at ?? row.created_at ?? new Date().toISOString(),
-    source:        "shopee",
+    source:        isTiktok ? "tiktok" : "shopee",
     itemSold,
     firstSeenAt:   row.created_at ?? undefined,
     workflowStatus: (row.workflow_status as Product["workflowStatus"]) ?? undefined,
@@ -142,7 +153,7 @@ async function loadAllProducts(): Promise<Product[]> {
     supabase
       .from("products")
       .select(SHOPEE_SELECT)
-      .eq("source_platform", "shopee")
+      .in("source_platform", ["shopee", "tiktok"])
       .order("item_sold", { ascending: false })
       .limit(2000),
     fetchCommissionMap(supabase),
@@ -169,7 +180,11 @@ async function loadAllProducts(): Promise<Product[]> {
     rows.map((r) => ({
       productId: r.id,
       price: Math.max(0, Number(r.price) || 0),
-      commissionRate: commissionMap.get(r.id)?.rate ?? null,
+      // tiktok: ค่าคอมจริงอยู่ในคอลัมน์ตรง ๆ | shopee: มาจาก commission_snapshots เท่านั้น
+      commissionRate:
+        r.source_platform === "tiktok"
+          ? Math.max(0, Number(r.commission_rate) || 0)
+          : (commissionMap.get(r.id)?.rate ?? null),
       firstSeenAt: r.created_at ?? new Date(0).toISOString(),
     })),
     baselines,
@@ -179,7 +194,7 @@ async function loadAllProducts(): Promise<Product[]> {
   return rows.map((row) => {
     const product = mapRow(row);
     const a = analytics.byProductId.get(row.id);
-    const commission = commissionMap.get(row.id);
+    const commission = row.source_platform === "shopee" ? commissionMap.get(row.id) : undefined;
 
     if (commission) {
       product.commissionRate = commission.rate;
@@ -226,11 +241,11 @@ async function getDataSyncStatus(): Promise<DataSyncStatus> {
       supabase
         .from("products")
         .select("*", { count: "exact", head: true })
-        .eq("source_platform", "shopee"),
+        .in("source_platform", ["shopee", "tiktok"]),
       supabase
         .from("import_logs")
         .select("completed_at, failed_count, message")
-        .eq("source", "shopee_product_feed")
+        .in("source", ["shopee_product_feed", "tiktok_manual"])
         .eq("mode", "import")
         .not("completed_at", "is", null)
         .order("completed_at", { ascending: false })
@@ -249,7 +264,7 @@ async function getDataSyncStatus(): Promise<DataSyncStatus> {
       syncStatus:   totalProducts > 0 ? "success" : "pending",
       message:
         totalProducts > 0
-          ? `Shopee Product Feed — ${totalProducts.toLocaleString("th-TH")} สินค้าในระบบ`
+          ? `Shopee Product Feed + TikTok Shop (นำเข้าด้วยมือ) — ${totalProducts.toLocaleString("th-TH")} สินค้าในระบบ`
           : "ยังไม่มีสินค้าใน Supabase — กรุณา Import ก่อน",
     };
   } catch (e) {
