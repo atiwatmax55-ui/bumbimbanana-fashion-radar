@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -41,7 +42,12 @@ interface HomeViewProps {
 
 export function HomeView({ products: allProducts, lastSyncedAt }: HomeViewProps) {
   const [range, setRange] = useState<TimeRange>("7d");
-  const [platform, setPlatform] = useState<PlatformKey>("all");
+  // รองรับ deep link "/?platform=tiktok" (เช่นจากหน้านำเข้าสินค้า TikTok) — เลือกแท็บให้ตั้งแต่เข้าเว็บ
+  const searchParams = useSearchParams();
+  const initialPlatform = searchParams.get("platform");
+  const [platform, setPlatform] = useState<PlatformKey>(
+    initialPlatform === "shopee" || initialPlatform === "tiktok" ? initialPlatform : "all",
+  );
   const rangeLabel = range === "7d" ? "7 วัน" : "30 วัน";
 
   const products = useMemo(() => filterByPlatform(allProducts, platform), [allProducts, platform]);
