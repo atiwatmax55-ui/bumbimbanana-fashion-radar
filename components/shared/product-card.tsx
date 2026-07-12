@@ -16,7 +16,6 @@ interface ProductCardProps {
  * การ์ดสินค้าแนว Sport-Luxury Editorial — คม โปร่ง แสดงเฉพาะข้อมูลที่มีจริง
  * Badge ทุกใบผูกกับสัญญาณจริง: HOT = ป้ายควรรีบทำคอนเทนต์, RISING = โต ≥20%,
  * NEW DROP = พบครั้งแรกใน 7 วัน, HIGH COMMISSION = มีค่าคอมจริง ≥ 10%
- * ห้ามแสดงชื่อหมวดสินค้าบนการ์ดตามกติกาเว็บ
  */
 export function ProductCard({ product, range, rankNumber }: ProductCardProps) {
   const metrics = metricsFor(product.analytics, range);
@@ -83,6 +82,9 @@ export function ProductCard({ product, range, rankNumber }: ProductCardProps) {
       </div>
 
       <div className="flex flex-col gap-1 px-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          {product.category}
+        </p>
         <h3 className="line-clamp-2 text-sm font-bold leading-snug text-foreground sm:text-[15px]">
           {product.productName}
         </h3>

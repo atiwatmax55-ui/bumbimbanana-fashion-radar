@@ -101,7 +101,7 @@ function passesWomenApparelFilter(row: ShopeeProductRow): boolean {
   const cat2 = row.category_level_2 ?? "";
   const cat3 = row.category_level_3 ?? "";
   const title = row.title || row.product_name || "";
-  if (!classifyWomenFashion(cat1, cat2, cat3).pass) return false;
+  if (!classifyWomenFashion(cat1, cat2, cat3, title).pass) return false;
   if (checkMaterialViolation(cat1, cat2, cat3, title).violated) return false;
   return true;
 }

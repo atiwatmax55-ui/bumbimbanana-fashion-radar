@@ -29,6 +29,7 @@ type FetchState =
 const RULE_LABEL: Record<string, string> = {
   cat1_women: "เสื้อผ้าผู้หญิง (หมวดหลัก)",
   standalone_women: "เสื้อผ้าแฟชั่นผู้หญิง",
+  cat1_women_shoes_bags: "รองเท้า/กระเป๋าผู้หญิง",
 };
 
 export function ShopeeWomenFashionCard() {
@@ -147,6 +148,10 @@ function ResultView({ data }: { data: WomenFashionPreviewResponse }) {
         <Stat
           label="หมวดแฟชั่นโดยตรง"
           value={filterStats.byRule.standaloneWomen.toLocaleString("th-TH")}
+        />
+        <Stat
+          label="รองเท้า/กระเป๋าผู้หญิง"
+          value={filterStats.byRule.womenShoesBags.toLocaleString("th-TH")}
         />
       </div>
 
@@ -425,7 +430,9 @@ function WomenProductTable({
                         ? "bg-brand-gold/20 text-foreground"
                         : p.passedByRule === "standalone_women"
                           ? "bg-positive/15 text-foreground"
-                          : "bg-muted text-muted-foreground"
+                          : p.passedByRule === "cat1_women_shoes_bags"
+                            ? "bg-brand-lime/25 text-foreground"
+                            : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {RULE_LABEL[p.passedByRule] ?? p.passedByRule}

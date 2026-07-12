@@ -243,7 +243,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       raw["title"] ?? raw["product_name"] ?? raw["item_name"] ?? raw["name"] ?? ""
     ).replace(/^﻿/, "").trim();
 
-    const cl = classifyWomenFashion(cat1, cat2, cat3);
+    const cl = classifyWomenFashion(cat1, cat2, cat3, rawTitle);
     if (!cl.pass) return true;
 
     // ─── Material/Tools/Care Exclusion ──────────────────────────────────

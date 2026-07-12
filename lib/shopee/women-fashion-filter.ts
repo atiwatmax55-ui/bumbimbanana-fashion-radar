@@ -27,10 +27,9 @@ const DENY_SET = new Set<string>([
   "girl clothes",
   "girl shoes",
   "sports footwear",
-  // v3 — เว็บนี้แสดงเฉพาะ "เสื้อผ้า" ผู้หญิงเท่านั้น: ตัดรองเท้า กระเป๋า
-  // เครื่องประดับ นาฬิกา แว่นตา และของใช้อื่นออกทั้งหมด
-  "women shoes",
-  "women bags",
+  // v4 — เว็บนี้แสดง "เสื้อผ้า + รองเท้า + กระเป๋า" ของผู้หญิงเท่านั้น
+  // รองเท้า/กระเป๋า unisex หรือหมวดกว้างที่ไม่ระบุเพศยังตัดทิ้งเหมือนเดิม
+  // (เฉพาะ "women shoes"/"women bags" ที่ผ่าน CAT1_WOMEN_SHOES_BAGS_SET ด้านล่างเท่านั้น)
   "women watches",
   "fashion accessories",
   "fine jewelry",
@@ -80,6 +79,31 @@ const STANDALONE_WOMEN_SET = new Set<string>([
   "jumpsuits, playsuits & overalls",
 ]);
 
+/**
+ * รองเท้า/กระเป๋าที่ Shopee ระบุว่าเป็นของผู้หญิง (cat1) — ผ่านได้ แต่ต้องตรวจ
+ * ชื่อสินค้าซ้ำด้วย hasMenKidsKeyword() ก่อนเสมอ (กันร้านค้าลงหมวดผิด)
+ */
+const CAT1_WOMEN_SHOES_BAGS_SET = new Set<string>(["women shoes", "women bags"]);
+
+// ─── Gender/Age Title Guard (เฉพาะ Women Shoes/Bags) ─────────────────────────
+// ⚠️ ใช้ \b word boundary กับคำอังกฤษ "men"/"man" — ป้องกัน false positive กับ
+// "women"/"woman" ที่มีตัวอักษรกลุ่มนี้อยู่ข้างใน (ห้ามใช้ includes("men") ตรง ๆ)
+
+const MEN_KIDS_TITLE_KEYWORDS_TH = ["ผู้ชาย", "unisex ชาย", "เด็ก"];
+const MEN_KIDS_TITLE_PATTERNS_EN = [/\bmen\b/i, /\bman\b/i, /\bkids?\b/i, /\bboy\b/i];
+
+/** คืนคำที่ตรง ถ้าชื่อสินค้ามีคำบ่งชี้ว่าเป็นของผู้ชาย/เด็ก — null ถ้าไม่พบ */
+function findMenKidsKeyword(title: string): string | null {
+  const lower = title.toLowerCase();
+  for (const kw of MEN_KIDS_TITLE_KEYWORDS_TH) {
+    if (lower.includes(kw)) return kw;
+  }
+  for (const pattern of MEN_KIDS_TITLE_PATTERNS_EN) {
+    if (pattern.test(title)) return pattern.source;
+  }
+  return null;
+}
+
 // ─── Violation Sets (ใช้ตรวจสอบซ้ำหลัง filter) ───────────────────────────────
 
 const VIOLATION_MEN_SET = new Set<string>([
@@ -105,9 +129,11 @@ const VIOLATION_BABY_SET = new Set<string>([
 export type WomenFashionRule =
   | "cat1_women"              // cat1 = Women Clothes (เสื้อผ้าผู้หญิง)
   | "standalone_women"        // cat1 ∈ Dresses/Skirts/Sets/…
+  | "cat1_women_shoes_bags"   // cat1 ∈ Women Shoes/Women Bags + ผ่าน title guard
   | "denied_cat1"             // cat1 ∈ deny list
   | "denied_cat2"             // cat2 ∈ deny list
   | "denied_cat3"             // cat3 ∈ deny list
+  | "denied_gender_keyword"   // cat1 = women shoes/bags แต่ชื่อสินค้าบ่งชี้ผู้ชาย/เด็ก
   | "not_women_fashion";      // ไม่อยู่ใน allow list ใด
 
 export type WomenFashionClassification = {
@@ -132,11 +158,13 @@ function norm(cat: string): string {
 /**
  * จำแนกสินค้าว่าเป็นแฟชั่นผู้หญิงหรือไม่
  * ใช้ deny-first + hierarchical allow — ห้ามใช้ includes("men")
+ * @param title ชื่อสินค้า — ใช้ตรวจ gender guard เฉพาะสินค้าที่มาทาง Women Shoes/Bags เท่านั้น
  */
 export function classifyWomenFashion(
   cat1: string,
   cat2: string,
   cat3: string | undefined,
+  title = "",
 ): WomenFashionClassification {
   const n1 = norm(cat1);
   const n2 = norm(cat2);
@@ -168,6 +196,23 @@ export function classifyWomenFashion(
       pass: true,
       rule: "standalone_women",
       filterReason: `เสื้อผ้าแฟชั่นผู้หญิง: ${cat1}`,
+    };
+  }
+
+  // ─ Step 3.5: Women Shoes/Bags as cat1 → ต้องผ่าน title gender guard ก่อน ──
+  if (CAT1_WOMEN_SHOES_BAGS_SET.has(n1)) {
+    const menKidsKeyword = findMenKidsKeyword(title);
+    if (menKidsKeyword) {
+      return {
+        pass: false,
+        rule: "denied_gender_keyword",
+        filterReason: `ตัดออก (ชื่อสินค้าบ่งชี้ผู้ชาย/เด็ก "${menKidsKeyword}"): ${cat1}`,
+      };
+    }
+    return {
+      pass: true,
+      rule: "cat1_women_shoes_bags",
+      filterReason: `รองเท้า/กระเป๋าผู้หญิง: ${cat1}`,
     };
   }
 

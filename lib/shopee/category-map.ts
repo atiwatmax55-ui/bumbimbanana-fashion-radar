@@ -1,9 +1,6 @@
 import type { ProductCategory } from "@/types/product";
 
-/**
- * แปลงหมวดจาก Shopee Feed → หมวดภายในระบบ (ใช้ debug/กรองภายในเท่านั้น)
- * กติกาเว็บ: "ห้ามแสดงชื่อหมวดสินค้าให้ผู้ใช้เห็น" — ค่านี้ต้องไม่ปรากฏบน UI
- */
+/** แปลงหมวดจาก Shopee Feed → หมวดภายในระบบ (แสดงบนการ์ดสินค้า + แถบกรองหมวดหมู่) */
 export const SHOPEE_CAT_MAP: Record<string, ProductCategory> = {
   "dresses": "เดรส",
   "wedding dresses": "เดรส",
@@ -12,6 +9,8 @@ export const SHOPEE_CAT_MAP: Record<string, ProductCategory> = {
   "jumpsuits, playsuits & overalls": "ชุดเซ็ต",
   "hoodies & sweatshirts": "เสื้อครอป",
   "women clothes": "อื่นๆ",
+  "women shoes": "รองเท้า",
+  "women bags": "กระเป๋า",
 };
 
 /** หมวดย่อย (cat2) ใต้ Women Clothes → หมวดภายใน */

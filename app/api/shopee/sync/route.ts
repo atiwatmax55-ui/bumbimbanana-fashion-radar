@@ -56,11 +56,11 @@ async function runSync(
     );
   }
 
-  // 3. ส่งต่อไปยัง import handler (top 1,000 สินค้าแฟชั่นผู้หญิง)
+  // 3. ส่งต่อไปยัง import handler (top 3,000 สินค้าแฟชั่นผู้หญิง)
   const fakeReq = new NextRequest("http://localhost/api/shopee/import", {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ mode: "import", limit: 1000 }),
+    body:    JSON.stringify({ mode: "import", limit: 3000 }),
   });
 
   const importRes  = await importHandler(fakeReq);

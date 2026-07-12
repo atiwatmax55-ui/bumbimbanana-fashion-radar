@@ -65,6 +65,7 @@ export type WomenFashionPreviewResponse = {
     byRule: {
       cat1Women: number;
       standaloneWomen: number;
+      womenShoesBags: number;
     };
   };
   validationSummary: {
@@ -149,6 +150,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let womenFashionFinalCount = 0;
   let cat1WomenCount = 0;
   let standaloneWomenCount = 0;
+  let womenShoesBagsCount = 0;
 
   type BufferedItem = { product: WomenFashionProduct; soldNum: number };
   const topBuffer: BufferedItem[] = [];
@@ -198,7 +200,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     // ─ ชั้น 1: Women Fashion Filter (deny-first + hierarchical allow) ─────────
-    const cl = classifyWomenFashion(cat1, cat2, cat3);
+    const cl = classifyWomenFashion(cat1, cat2, cat3, title);
     if (!cl.pass) return true;
 
     womenFashionBeforeMaterial++;
@@ -214,6 +216,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     womenFashionFinalCount++;
     if (cl.rule === "cat1_women") cat1WomenCount++;
     else if (cl.rule === "standalone_women") standaloneWomenCount++;
+    else if (cl.rule === "cat1_women_shoes_bags") womenShoesBagsCount++;
 
     const soldNum = parseInt(itemSold, 10) || 0;
     const imageUrl = getField(row, "image_link") || getField(row, "image_link_4");
@@ -361,6 +364,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       byRule: {
         cat1Women: cat1WomenCount,
         standaloneWomen: standaloneWomenCount,
+        womenShoesBags: womenShoesBagsCount,
       },
     },
     validationSummary: {

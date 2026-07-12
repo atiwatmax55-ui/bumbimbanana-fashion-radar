@@ -13,6 +13,11 @@ import {
   filterByPlatform,
   type PlatformKey,
 } from "@/components/shared/platform-switch";
+import {
+  CategoryMenu,
+  filterByCategory,
+  type CategoryKey,
+} from "@/components/shared/category-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -63,11 +68,17 @@ export function ProductBrowseView({
   const [query, setQuery] = useState("");
   const [chip, setChip] = useState<ChipKey>("all");
   const [platform, setPlatform] = useState<PlatformKey>("all");
+  const [category, setCategory] = useState<CategoryKey>("all");
   const { isSaved } = useSavedProducts();
+
+  const platformFiltered = useMemo(
+    () => filterByPlatform(products, platform),
+    [products, platform],
+  );
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = filterByPlatform(products, platform).filter(
+    let list = filterByCategory(platformFiltered, category).filter(
       (p) => !q || p.productName.toLowerCase().includes(q),
     );
 
@@ -113,7 +124,7 @@ export function ProductBrowseView({
       default:
         return [...list].sort((a, b) => (b.itemSold ?? 0) - (a.itemSold ?? 0));
     }
-  }, [products, query, chip, sortBy, range, isSaved, platform]);
+  }, [platformFiltered, query, chip, sortBy, range, isSaved, category]);
 
 
   return (
@@ -131,6 +142,8 @@ export function ProductBrowseView({
         </p>
         <PlatformSwitch value={platform} onChange={setPlatform} className="w-fit" />
       </div>
+
+      <CategoryMenu products={platformFiltered} value={category} onChange={setCategory} />
 
       {/* แถวควบคุม: ค้นหา + ช่วงเวลา + เรียง */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
