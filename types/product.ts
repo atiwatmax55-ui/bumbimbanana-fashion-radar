@@ -72,6 +72,20 @@ export interface Product {
    * approved_for_content = อนุมัติทำคอนเทนต์ | rejected = ปฏิเสธ
    */
   workflowStatus?: "radar_found" | "strategy_review" | "approved_for_content" | "rejected";
+  /** true = ใส่ได้จริง (เสื้อผ้า/รองเท้า/กระเป๋า) | false = เครื่องประดับ/ของแต่งบ้านที่หลุดผ่าน category filter | undefined = ยังไม่ได้จัดประเภท */
+  isOutfitItem?: boolean;
+  /** สีหลักของสินค้า 1–3 สี (ภาษาไทย) — มาจาก rule-based extractor หรือ AI vision */
+  colors?: string[];
+  /** แท็กสไตล์ เช่น มินิมอล, เกาหลี, Y2K, สปอร์ต */
+  styleTags?: string[];
+  /** ทรงตัด เช่น ครอป, โอเวอร์ไซส์, เอวสูง */
+  silhouette?: string;
+  /** เนื้อผ้า เช่น คอตตอน, ยีนส์, ซาติน — null ถ้าไม่ทราบ */
+  fabric?: string | null;
+  /** จุดเด่นการออกแบบ เช่น โบว์, ลูกไม้, กระดุมเยอะ */
+  detailPoints?: string[];
+  /** คะแนน "น่าถ่ายทำคอนเทนต์" 0–100 ให้โดย AI vision — undefined ถ้ายังไม่ได้ประเมิน */
+  contentWorthyScore?: number;
 }
 
 /**
@@ -101,6 +115,17 @@ export interface ContentBadge {
   reason: string;
 }
 
+/**
+ * ประมาณการความมาแรงชั่วคราว = ยอดสะสม ÷ จำนวนวันที่ระบบรู้จักสินค้า
+ * ใช้เฉพาะตอนที่ยังไม่มีข้อมูล snapshot 7 วันจริง (d7 === null) — ห้ามใช้แทน trendScore จริง
+ */
+export interface VelocityEstimate {
+  /** ยอดสะสม ÷ วัน — ยิ่งสูงยิ่งขายเร็ว */
+  value: number;
+  /** ป้ายกำกับให้ UI แสดงชัดเจนว่าเป็นค่าประมาณ ไม่ใช่ข้อมูลจริง */
+  label: "ประมาณการ (ยังไม่มีข้อมูล 7 วัน)";
+}
+
 /** ข้อมูลวิเคราะห์รายสินค้า แยกตามช่วงเวลา */
 export interface ProductAnalytics {
   d7: PeriodMetrics | null;
@@ -109,6 +134,8 @@ export interface ProductAnalytics {
   badge30: ContentBadge | null;
   /** เป็นสินค้าใหม่ (ระบบพบใน Feed ครั้งแรกภายใน 7 วัน หลังจากเริ่มเก็บข้อมูล) */
   isNew: boolean;
+  /** ประมาณการความมาแรงจากยอดสะสม — null เมื่อมีข้อมูล d7 จริงแล้ว (ไม่จำเป็นต้องใช้ค่าประมาณ) */
+  velocityEstimate: VelocityEstimate | null;
 }
 
 /** สินค้าที่ถูกบันทึกไว้พร้อมโน้ตส่วนตัว สอดคล้องกับตาราง saved_products */

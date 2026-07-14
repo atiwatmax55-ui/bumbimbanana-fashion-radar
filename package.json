@@ -10,6 +10,7 @@
     "test:normalizer": "npx tsx scripts/test-shopee-normalizer.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "@base-ui/react": "^1.6.0",
     "@supabase/supabase-js": "^2.108.2",
     "@tanstack/react-table": "^8.21.3",

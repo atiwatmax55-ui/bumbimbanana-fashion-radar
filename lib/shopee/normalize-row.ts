@@ -99,7 +99,7 @@ export function normalizeShopeeRow(
   const cat1 = get(raw, "global_category1", "category1", "category_level_1", "main_category");
   const cat2 = get(raw, "global_category2", "category2", "category_level_2");
   const cat3 = get(raw, "global_category3", "category3", "category_level_3");
-  const category: string = mapShopeeCategory(cat1, cat2) || "อื่นๆ";
+  const category: string = mapShopeeCategory(cat1, cat2, title) || "อื่นๆ";
 
   // ── 5. optional fields ────────────────────────────────────────────────
   const imageUrl =

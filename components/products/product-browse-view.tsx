@@ -18,6 +18,23 @@ import {
   filterByCategory,
   type CategoryKey,
 } from "@/components/shared/category-menu";
+import {
+  ColorSwatchFilter,
+  filterByColor,
+  type ColorKey,
+} from "@/components/shared/color-swatch-filter";
+import {
+  StyleTagFilter,
+  filterByStyleTag,
+  type StyleTagKey,
+} from "@/components/shared/style-tag-filter";
+import {
+  PriceRangeFilter,
+  filterByPriceRange,
+  PRICE_RANGE_ALL,
+  type PriceRange,
+} from "@/components/shared/price-range-filter";
+import { ShopSearchFilter, filterByShop } from "@/components/shared/shop-search-filter";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -38,7 +55,7 @@ const SORT_OPTIONS: { value: BrowseSortKey; label: string }[] = [
   { value: "cumulative", label: "ยอดขายสะสมจาก Shopee" },
 ];
 
-type ChipKey = "all" | "urgent" | "has_commission" | "new" | "saved";
+type ChipKey = "all" | "urgent" | "has_commission" | "new" | "saved" | "content_worthy";
 
 const CHIP_LABELS: Record<ChipKey, string> = {
   all: "ทั้งหมด",
@@ -46,7 +63,11 @@ const CHIP_LABELS: Record<ChipKey, string> = {
   has_commission: "มีค่าคอมจริง",
   new: "สินค้าใหม่",
   saved: "บันทึกไว้",
+  content_worthy: "ของสวยถ่ายลง",
 };
+
+/** เกณฑ์ "ของสวยถ่ายลง": คะแนน AI vision ≥70 + ใส่ได้จริง + (สินค้าใหม่ หรือ ติดป้ายมาแรง) */
+const CONTENT_WORTHY_SCORE_MIN = 70;
 
 interface ProductBrowseViewProps {
   products: Product[];
@@ -69,6 +90,11 @@ export function ProductBrowseView({
   const [chip, setChip] = useState<ChipKey>("all");
   const [platform, setPlatform] = useState<PlatformKey>("all");
   const [category, setCategory] = useState<CategoryKey>("all");
+  const [showAll, setShowAll] = useState(false);
+  const [color, setColor] = useState<ColorKey>("all");
+  const [styleTag, setStyleTag] = useState<StyleTagKey>("all");
+  const [priceRange, setPriceRange] = useState<PriceRange>(PRICE_RANGE_ALL);
+  const [shopQuery, setShopQuery] = useState("");
   const { isSaved } = useSavedProducts();
 
   const platformFiltered = useMemo(
@@ -76,11 +102,22 @@ export function ProductBrowseView({
     [products, platform],
   );
 
+  const hiddenCount = useMemo(
+    () => platformFiltered.filter((p) => p.isOutfitItem === false).length,
+    [platformFiltered],
+  );
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = filterByCategory(platformFiltered, category).filter(
-      (p) => !q || p.productName.toLowerCase().includes(q),
-    );
+    let list = filterByCategory(platformFiltered, category)
+      // ตัวกรอง "ใส่ได้จริง" — ซ่อนเครื่องประดับ/ของแต่งบ้านที่หลุดผ่าน category filter มา
+      // เป็น default เท่านั้น กด "แสดงทั้งหมด" เพื่อดูของที่ถูกซ่อนได้
+      .filter((p) => showAll || p.isOutfitItem !== false)
+      .filter((p) => !q || p.productName.toLowerCase().includes(q));
+    list = filterByColor(list, color);
+    list = filterByStyleTag(list, styleTag);
+    list = filterByPriceRange(list, priceRange);
+    list = filterByShop(list, shopQuery);
 
     switch (chip) {
       case "urgent":
@@ -94,6 +131,14 @@ export function ProductBrowseView({
         break;
       case "saved":
         list = list.filter((p) => isSaved(p.id));
+        break;
+      case "content_worthy":
+        list = list.filter(
+          (p) =>
+            (p.contentWorthyScore ?? 0) >= CONTENT_WORTHY_SCORE_MIN &&
+            p.isOutfitItem !== false &&
+            (p.analytics?.isNew || badgeFor(p.analytics, range) !== null),
+        );
         break;
     }
 
@@ -116,7 +161,11 @@ export function ProductBrowseView({
           const ta = m(a)?.trendRank ?? Infinity;
           const tb = m(b)?.trendRank ?? Infinity;
           if (ta !== tb) return ta - tb;
-          return (b.itemSold ?? 0) - (a.itemSold ?? 0);
+          // ยังไม่มีข้อมูล 7 วันจริงทั้งคู่ — ใช้ velocity (ยอดสะสม ÷ วันที่ระบบรู้จัก) แทนยอดสะสมดิบ
+          // กันสินค้าเก่าที่ยอดสะสมสูงแต่ขายช้าลงแล้ว ครอบงำอันดับ "มาแรง"
+          const va = a.analytics?.velocityEstimate?.value ?? 0;
+          const vb = b.analytics?.velocityEstimate?.value ?? 0;
+          return vb - va;
         });
       case "new":
         return [...list].sort((a, b) => (b.firstSeenAt ?? "").localeCompare(a.firstSeenAt ?? ""));
@@ -124,7 +173,10 @@ export function ProductBrowseView({
       default:
         return [...list].sort((a, b) => (b.itemSold ?? 0) - (a.itemSold ?? 0));
     }
-  }, [platformFiltered, query, chip, sortBy, range, isSaved, category]);
+  }, [
+    platformFiltered, query, chip, sortBy, range, isSaved, category, showAll,
+    color, styleTag, priceRange, shopQuery,
+  ]);
 
 
   return (
@@ -144,6 +196,14 @@ export function ProductBrowseView({
       </div>
 
       <CategoryMenu products={platformFiltered} value={category} onChange={setCategory} />
+
+      {/* แถบกรองเพิ่มเติม: สี, สไตล์, ราคา, ร้านค้า (สี/สไตล์ซ่อนเองถ้ายังไม่มีข้อมูล) */}
+      <div className="flex flex-col gap-2.5 border-b border-border pb-4 lg:flex-row lg:flex-wrap lg:items-center">
+        <ColorSwatchFilter products={platformFiltered} value={color} onChange={setColor} />
+        <StyleTagFilter products={platformFiltered} value={styleTag} onChange={setStyleTag} />
+        <PriceRangeFilter value={priceRange} onChange={setPriceRange} />
+        <ShopSearchFilter value={shopQuery} onChange={setShopQuery} className="w-full lg:w-56" />
+      </div>
 
       {/* แถวควบคุม: ค้นหา + ช่วงเวลา + เรียง */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -194,6 +254,20 @@ export function ProductBrowseView({
             {CHIP_LABELS[key]}
           </button>
         ))}
+        {hiddenCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            className={`border px-3.5 py-1.5 text-xs font-bold tracking-wide transition-colors ${
+              showAll
+                ? "border-foreground bg-foreground text-background"
+                : "border-dashed border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
+            title="เครื่องประดับ/ของแต่งบ้านที่หลุดผ่านตัวกรองหมวดหมู่ — ปกติซ่อนไว้"
+          >
+            {showAll ? "ซ่อนของที่ไม่ใช่เสื้อผ้า" : `แสดงทั้งหมด (+${hiddenCount})`}
+          </button>
+        ) : null}
         <span className="ml-auto text-xs text-muted-foreground">
           พบ {visible.length.toLocaleString("th-TH")} รายการ
         </span>

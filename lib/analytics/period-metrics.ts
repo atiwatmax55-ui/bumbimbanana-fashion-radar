@@ -1,4 +1,10 @@
-import type { ContentBadge, PeriodMetrics, ProductAnalytics, TimeRange } from "@/types/product";
+import type {
+  ContentBadge,
+  PeriodMetrics,
+  ProductAnalytics,
+  TimeRange,
+  VelocityEstimate,
+} from "@/types/product";
 
 /**
  * คำนวณตัวเลข 7/30 วันจาก baseline ยอดขายสะสม (ผลจาก RPC radar_baselines)
@@ -59,6 +65,20 @@ interface ProductInput {
   price: number;
   commissionRate: number | null;
   firstSeenAt: string;
+  /** ยอดขายสะสมจาก Feed — ใช้คำนวณ velocity fallback เมื่อยังไม่มีข้อมูล d7 จริง */
+  itemSold: number;
+}
+
+/**
+ * ประมาณการความมาแรงชั่วคราว = ยอดสะสม ÷ จำนวนวันที่ระบบรู้จักสินค้า
+ * ใช้เฉพาะตอน d7 ยังเป็น null (snapshot สะสมไม่ครบ 7 วัน) — ไม่เขียนทับ trendScore จริงเด็ดขาด
+ */
+export function computeVelocity(itemSold: number, firstSeenAt: string, now: Date): number {
+  const firstSeen = new Date(firstSeenAt).getTime();
+  const daysTracked = Number.isFinite(firstSeen)
+    ? Math.max(1, (now.getTime() - firstSeen) / (24 * 3600 * 1000))
+    : 1;
+  return Math.round((Math.max(0, itemSold) / daysTracked) * 100) / 100;
 }
 
 export interface AnalyticsResult {
@@ -209,9 +229,16 @@ export function computeAnalytics(
         (baselineCutoff === null || firstSeen > baselineCutoff);
       const d7 = d7Map.get(p.productId) ?? null;
       const d30 = d30Map.get(p.productId) ?? null;
+      const velocityEstimate: VelocityEstimate | null =
+        d7 === null
+          ? {
+              value: computeVelocity(p.itemSold, p.firstSeenAt, now),
+              label: "ประมาณการ (ยังไม่มีข้อมูล 7 วัน)",
+            }
+          : null;
       return [
         p.productId,
-        { d7, d30, badge7: buildBadge(d7), badge30: buildBadge(d30), isNew },
+        { d7, d30, badge7: buildBadge(d7), badge30: buildBadge(d30), isNew, velocityEstimate },
       ];
     }),
   );

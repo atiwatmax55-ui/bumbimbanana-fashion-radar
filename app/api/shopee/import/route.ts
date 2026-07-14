@@ -6,6 +6,7 @@ import {
 } from "@/lib/shopee/women-fashion-filter";
 import { getSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { normalizeShopeeRow, type NormalizedShopeeRow } from "@/lib/shopee/normalize-row";
+import { runStyleTagBatch } from "@/lib/style/style-tag-batch";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -419,14 +420,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // ความล้มเหลวของ snapshot ต้องไม่ทำให้ sync ทั้งรอบล้มเหลว — เก็บเป็นข้อความแทน
   const snapshotNote = await writeDailySnapshots(supabase, finalRecords);
 
+  // ─── Style-tag batch (เฟส 2.1/2.2) — ทำหลัง snapshot เสมอ ไม่ทำให้ sync ทั้งรอบล้ม ─
+  const styleTagNote = await runStyleTagBatch(supabase);
+
   const completedAt = new Date().toISOString();
 
   await updateLog(
     supabase, logId, dataRowCount, eligibleCount,
     insertedCount, updatedCount, skippedReasons.length, failedCount,
     failedCount > 0
-      ? `Import มีปัญหา — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}, ล้มเหลว ${failedCount}: ${firstImportError ?? "unknown"}${snapshotNote}`
-      : `Import สำเร็จ — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}${snapshotNote}`,
+      ? `Import มีปัญหา — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}, ล้มเหลว ${failedCount}: ${firstImportError ?? "unknown"}${snapshotNote}${styleTagNote}`
+      : `Import สำเร็จ — เพิ่มใหม่ ${insertedCount}, อัปเดต ${updatedCount}${snapshotNote}${styleTagNote}`,
     completedAt,
   );
 

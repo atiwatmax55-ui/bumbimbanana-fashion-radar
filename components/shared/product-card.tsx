@@ -117,6 +117,13 @@ export function ProductCard({ product, range, rankNumber }: ProductCardProps) {
           <p className="text-[11px] text-muted-foreground">
             ยอดขายสะสม {formatNumber(product.itemSold)} ชิ้น
             <span className="text-muted-foreground/70"> • กำลังเก็บข้อมูลราย {rangeLabel}</span>
+            {product.analytics?.velocityEstimate ? (
+              <span className="text-muted-foreground/70">
+                {" "}
+                • ขายประมาณ {product.analytics.velocityEstimate.value.toFixed(1)} ชิ้น/วัน (
+                {product.analytics.velocityEstimate.label})
+              </span>
+            ) : null}
           </p>
         ) : null}
       </div>

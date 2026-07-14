@@ -30,7 +30,27 @@ export const SHOPEE_SUBCAT_MAP: Record<string, ProductCategory> = {
   "sports & activewear": "เสื้อออกกำลังกาย",
 };
 
-export function mapShopeeCategory(cat1?: string | null, cat2?: string | null): ProductCategory {
+// คำในชื่อสินค้าที่บ่งชี้ว่าเป็น "ชุดเซ็ต" จริง แม้ Feed จะลง cat2 ผิดเป็นเสื้อ/กระโปรงเดี่ยว
+// (เช่น ร้านลงหมวด "tops" ทั้งที่สินค้าคือ "เสื้อ+กระโปรง ชุดเซ็ต 2 ชิ้น")
+const TITLE_SET_KEYWORDS = ["ชุดเซ็ท", "ชุดเซ็ต", "เซ็ต 2 ชิ้น", "เซ็ท 2 ชิ้น", "set 2", "2 piece set", "co-ord"];
+
+function titleIndicatesSet(title: string): boolean {
+  const lower = title.trim().toLowerCase();
+  if (!lower) return false;
+  return TITLE_SET_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+/**
+ * แปลงหมวด Shopee → หมวดภายในระบบ ตามลำดับความสำคัญ:
+ * ชุดเซ็ต (title override) > เดรส/กระโปรง/กางเกง (cat2 ตรง) > cat1 fallback
+ * @param title ใช้ตรวจ "ชุดเซ็ต" เท่านั้น กัน cat2 ผิดพลาดจากร้านลงหมวดไม่ตรง
+ */
+export function mapShopeeCategory(
+  cat1?: string | null,
+  cat2?: string | null,
+  title?: string | null,
+): ProductCategory {
+  if (titleIndicatesSet(title ?? "")) return "ชุดเซ็ต";
   const n2 = (cat2 ?? "").trim().toLowerCase();
   if (n2 && SHOPEE_SUBCAT_MAP[n2]) return SHOPEE_SUBCAT_MAP[n2];
   const n1 = (cat1 ?? "").trim().toLowerCase();

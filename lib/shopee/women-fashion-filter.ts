@@ -325,8 +325,61 @@ export function checkMaterialViolation(
   return { violated: false, violationType: null, violatingValue: null };
 }
 
+// ─── Wearable Filter ("ใส่ได้จริง") ───────────────────────────────────────────
+// ตัดสินค้าที่หลุดผ่าน category filter มาได้ แต่ไม่ใช่ "เสื้อผ้า/รองเท้า/กระเป๋าที่ใส่ได้จริง"
+// เช่น เครื่องประดับ, ของแต่งบ้าน, อุปกรณ์ทำความสะอาด — เช็คด้วย title keyword เท่านั้น
+// (ไม่พึ่ง category เพราะ Feed บางร้านลงหมวดสินค้าประเภทนี้ผิดเป็น "women clothes")
+
+const WEARABLE_DENY_TITLE_KEYWORDS_TH = [
+  "เครื่องประดับ",
+  "จิวเวลรี่",
+  "ต่างหู",
+  "สร้อยคอ",
+  "สร้อยข้อมือ",
+  "แหวน",
+  "ถุงเท้า",
+  "เข็มขัด",
+  "น้ำหอม",
+  "ของแต่งบ้าน",
+  "ผ้าคลุมโซฟา",
+  "อุปกรณ์ทำความสะอาด",
+  "น้ำยาทำความสะอาด",
+  "กระเป๋าสตางค์",
+  "การ์ดโฮลเดอร์",
+  "ที่ใส่บัตร",
+  "jibbitz",
+  "ตัวติดรองเท้า",
+  "หมวกกันน็อค",
+  "ของเล่นสัตว์เลี้ยง",
+  "ของเล่นเด็ก",
+  "เครื่องเขียน",
+  "ปากกา",
+  "สมุด",
+];
+
+export type WearableClassification = {
+  isOutfitItem: boolean;
+  reason: string;
+};
+
+/**
+ * ตรวจว่าสินค้าเป็น "ของใส่ได้จริง" (เสื้อผ้า/รองเท้า/กระเป๋า) หรือไม่
+ * ใช้กับสินค้าทั้ง shopee และ tiktok (ต่างจาก classifyWomenFashion ที่ bypass tiktok)
+ * เพราะของไม่ใช่แฟชั่นแทรกเข้ามาได้ทั้งสองแพลตฟอร์ม
+ */
+export function classifyWearable(title: string): WearableClassification {
+  const lower = (title || "").toLowerCase();
+  for (const kw of WEARABLE_DENY_TITLE_KEYWORDS_TH) {
+    if (lower.includes(kw)) {
+      return { isOutfitItem: false, reason: `ไม่ใช่ของใส่ได้จริง (พบคำ "${kw}"): ${title}` };
+    }
+  }
+  return { isOutfitItem: true, reason: "ใส่ได้จริง" };
+}
+
 // ─── Exposed constants (for docs / UI display) ───────────────────────────────
 
 export const WOMEN_FASHION_WHITELIST_COUNT = CAT1_WOMEN_SET.size + STANDALONE_WOMEN_SET.size;
 export const DENY_LIST_ITEMS = [...DENY_SET];
 export const MATERIAL_DENY_CATEGORIES = [...MATERIAL_CATEGORY_DENY];
+export const WEARABLE_DENY_KEYWORDS = [...WEARABLE_DENY_TITLE_KEYWORDS_TH];

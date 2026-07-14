@@ -10,7 +10,9 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import {
   classifyWomenFashion,
   checkMaterialViolation,
+  classifyWearable,
 } from "@/lib/shopee/women-fashion-filter";
+import { mapShopeeCategory } from "@/lib/shopee/category-map";
 import {
   computeAnalytics,
   type BaselineRow,
@@ -39,13 +41,24 @@ type ShopeeProductRow = {
   created_at:         string | null;
   updated_at:         string | null;
   workflow_status?:   string | null;
+  is_outfit_item?:    boolean | null;
+  colors?:            string[] | null;
+  style_tags?:        string[] | null;
+  silhouette?:        string | null;
+  fabric?:            string | null;
+  detail_points?:     string[] | null;
+  content_worthy_score?: number | null;
 };
 
-const SHOPEE_SELECT =
+const SHOPEE_SELECT_LEGACY =
   "id, source_platform, title, product_name, product_image, product_url, shop_name, " +
   "category, category_level_1, category_level_2, category_level_3, " +
   "price, item_sold, commission_rate, commission_status, interest_score, " +
   "created_at, updated_at, workflow_status";
+
+const SHOPEE_SELECT =
+  SHOPEE_SELECT_LEGACY +
+  ", is_outfit_item, colors, style_tags, silhouette, fabric, detail_points, content_worthy_score";
 
 // ─── Cache ระดับ module (อายุสั้น) — ลดจำนวน query ต่อ 1 page render ───────────
 let cache: { at: number; products: Product[] } | null = null;
@@ -106,13 +119,28 @@ function passesWomenApparelFilter(row: ShopeeProductRow): boolean {
   return true;
 }
 
+// ─── ตัวกรอง "ใส่ได้จริง" (is_outfit_item) — รันกับทั้ง shopee และ tiktok ──────
+// ตัวคอลัมน์ is_outfit_item ใน DB เป็นค่าที่ AI vision batch (เฟส 2) เขียนกลับหลังตรวจรูปจริง
+// ถ้ายังไม่มีค่า (null) ให้ re-classify จาก title สดทุกครั้งที่อ่าน (เหมือน passesWomenApparelFilter)
+// เพื่อให้ตัวกรองทำงานได้ทันทีโดยไม่ต้องรอ batch job — ค่าจาก DB (ถ้ามี) ชนะเสมอเพราะแม่นกว่า
+function resolveIsOutfitItem(row: ShopeeProductRow): boolean {
+  if (row.is_outfit_item !== null && row.is_outfit_item !== undefined) return row.is_outfit_item;
+  const title = row.title || row.product_name || "";
+  return classifyWearable(title).isOutfitItem;
+}
+
 // ─── Mapper ───────────────────────────────────────────────────────────────────
 function mapRow(row: ShopeeProductRow): Product {
   const itemSold = Math.max(0, Number(row.item_sold) || 0);
   const price = Math.max(0, Number(row.price) || 0);
   const name = (row.title || row.product_name || "").trim() || "—";
-  const category = (row.category || "อื่นๆ") as ProductCategory;
   const isTiktok = row.source_platform === "tiktok";
+  // shopee: re-classify จาก category_level_1/2 + title ทุกครั้งที่อ่าน (เหมือน women-fashion filter)
+  // เพื่อให้กฎหมวดหมู่ใหม่มีผลกับสินค้าเก่าทันที ไม่ต้อง backfill — tiktok เชื่อคอลัมน์ category ที่กรอกมือ
+  const category: ProductCategory =
+    !isTiktok && row.category_level_1
+      ? mapShopeeCategory(row.category_level_1, row.category_level_2, name)
+      : ((row.category || "อื่นๆ") as ProductCategory);
 
   return {
     id:            String(row.id),
@@ -142,6 +170,13 @@ function mapRow(row: ShopeeProductRow): Product {
     itemSold,
     firstSeenAt:   row.created_at ?? undefined,
     workflowStatus: (row.workflow_status as Product["workflowStatus"]) ?? undefined,
+    isOutfitItem:  resolveIsOutfitItem(row),
+    colors:        row.colors ?? undefined,
+    styleTags:     row.style_tags ?? undefined,
+    silhouette:    row.silhouette ?? undefined,
+    fabric:        row.fabric ?? undefined,
+    detailPoints:  row.detail_points ?? undefined,
+    contentWorthyScore: row.content_worthy_score ?? undefined,
   };
 }
 
@@ -149,16 +184,28 @@ function mapRow(row: ShopeeProductRow): Product {
 async function loadAllProducts(): Promise<Product[]> {
   const supabase = getSupabaseServerClient();
 
-  const [{ data, error }, commissionMap, baselines] = await Promise.all([
-    supabase
+  function selectProducts(columns: string) {
+    return supabase
       .from("products")
-      .select(SHOPEE_SELECT)
+      .select(columns)
       .in("source_platform", ["shopee", "tiktok"])
       .order("item_sold", { ascending: false })
-      .limit(2000),
+      .limit(2000);
+  }
+
+  const [firstAttempt, commissionMap, baselines] = await Promise.all([
+    selectProducts(SHOPEE_SELECT),
     fetchCommissionMap(supabase),
     fetchBaselines(supabase),
   ]);
+  let { data, error } = firstAttempt;
+
+  // ยังไม่ได้รัน migration 0010 (คอลัมน์ style metadata ไม่มี — Postgres 42703) →
+  // ถอยไปอ่านคอลัมน์ชุดเดิม เว็บต้องไม่ล่มเพราะ migration ค้าง ฟีเจอร์ใหม่แค่ยังไม่ทำงาน
+  if (error && error.code === "42703") {
+    console.warn("[shopee-repo] ยังไม่ได้รัน migration 0010 — อ่านแบบไม่มี style metadata ไปก่อน");
+    ({ data, error } = await selectProducts(SHOPEE_SELECT_LEGACY));
+  }
 
   if (error) {
     // ห้าม fallback ไป Mock Data — จะแสดงสินค้าผิดตัวโดยไม่รู้ตัว
@@ -166,6 +213,8 @@ async function loadAllProducts(): Promise<Product[]> {
     throw new Error(`ดึงข้อมูลสินค้าจาก Supabase ไม่สำเร็จ: ${error.message}`);
   }
 
+  // หมายเหตุ: ไม่กรอง wearable ที่นี่ (ต่างจาก women-fashion filter) — isOutfitItem ต้องส่งถึง client
+  // เพื่อให้ปุ่ม "แสดงทั้งหมด" ใน product-browse-view.tsx เปิดดูของที่ถูกซ่อนได้
   const rows = ((data ?? []) as unknown as ShopeeProductRow[]).filter(passesWomenApparelFilter);
 
   // เวลา import ครั้งแรกสุดของระบบ — ใช้แยก "สินค้าใหม่" ออกจากชุดข้อมูลตั้งต้น
@@ -186,6 +235,7 @@ async function loadAllProducts(): Promise<Product[]> {
           ? Math.max(0, Number(r.commission_rate) || 0)
           : (commissionMap.get(r.id)?.rate ?? null),
       firstSeenAt: r.created_at ?? new Date(0).toISOString(),
+      itemSold: Math.max(0, Number(r.item_sold) || 0),
     })),
     baselines,
     systemBaselineAt,

@@ -29,12 +29,12 @@ const baselines: BaselineRow[] = [
   { product_id: 4, latest_sold: 100, latest_date: "2026-07-04", sold_7d_ago: 500, sold_14d_ago: 400, sold_30d_ago: null, sold_60d_ago: null, earliest_date: "2026-06-20", snapshot_days: 15 },
 ];
 const products = [
-  { productId: 1, price: 300, commissionRate: 10, firstSeenAt: "2026-06-20T00:00:00Z" },
-  { productId: 2, price: 300, commissionRate: 15, firstSeenAt: "2026-06-20T00:00:00Z" },
-  { productId: 3, price: 300, commissionRate: null, firstSeenAt: "2026-06-27T00:00:00Z" },
-  { productId: 4, price: 300, commissionRate: null, firstSeenAt: "2026-06-20T00:00:00Z" },
+  { productId: 1, price: 300, commissionRate: 10, firstSeenAt: "2026-06-20T00:00:00Z", itemSold: 1300 },
+  { productId: 2, price: 300, commissionRate: 15, firstSeenAt: "2026-06-20T00:00:00Z", itemSold: 5050 },
+  { productId: 3, price: 300, commissionRate: null, firstSeenAt: "2026-06-27T00:00:00Z", itemSold: 800 },
+  { productId: 4, price: 300, commissionRate: null, firstSeenAt: "2026-06-20T00:00:00Z", itemSold: 100 },
   // สินค้า 5: ไม่มี snapshot เลย → ทุก metric = null, เป็นสินค้าใหม่ (พบ 2 วันก่อน)
-  { productId: 5, price: 300, commissionRate: null, firstSeenAt: "2026-07-02T10:00:00Z" },
+  { productId: 5, price: 300, commissionRate: null, firstSeenAt: "2026-07-02T10:00:00Z", itemSold: 20 },
 ];
 const r = computeAnalytics(products, baselines, "2026-06-20T00:00:00Z", now);
 

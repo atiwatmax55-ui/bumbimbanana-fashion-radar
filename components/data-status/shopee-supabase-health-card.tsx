@@ -34,7 +34,10 @@ LANGUAGE SQL STABLE SECURITY DEFINER AS $$
     'item_sold', 'item_rating', 'like_count', 'raw_sale_price',
     'commission_status', 'data_source', 'is_preferred_shop', 'is_official_shop',
     'category_level_1', 'category_level_2', 'category_level_3', 'shop_rating',
-    'passed_by_rule', 'filter_reason', 'imported_at'
+    'passed_by_rule', 'filter_reason', 'imported_at',
+    -- Migration 0010: wearable filter + style metadata
+    'is_outfit_item', 'colors', 'style_tags', 'silhouette', 'fabric',
+    'detail_points', 'content_worthy_score', 'style_tagged_at'
   ]) AS col
   WHERE NOT EXISTS (
     SELECT 1 FROM information_schema.columns
@@ -193,7 +196,22 @@ CREATE TABLE IF NOT EXISTS public.product_images (
 );
 
 CREATE INDEX IF NOT EXISTS idx_product_images_product_id
-  ON public.product_images (product_id, sort_order);`;
+  ON public.product_images (product_id, sort_order);
+
+-- ─── 10. Migration 0010: wearable filter + style metadata ──────────────────
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS is_outfit_item       BOOLEAN,
+  ADD COLUMN IF NOT EXISTS colors               TEXT[],
+  ADD COLUMN IF NOT EXISTS style_tags           TEXT[],
+  ADD COLUMN IF NOT EXISTS silhouette           TEXT,
+  ADD COLUMN IF NOT EXISTS fabric               TEXT,
+  ADD COLUMN IF NOT EXISTS detail_points        TEXT[],
+  ADD COLUMN IF NOT EXISTS content_worthy_score SMALLINT,
+  ADD COLUMN IF NOT EXISTS style_tagged_at      TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_products_style_tagged_at
+  ON public.products (style_tagged_at)
+  WHERE style_tagged_at IS NULL;`;
 
 
 export function ShopeeSupabaseHealthCard() {

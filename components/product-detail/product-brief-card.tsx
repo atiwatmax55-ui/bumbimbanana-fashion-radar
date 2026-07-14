@@ -22,7 +22,7 @@ interface ProductBriefCardProps {
   commission: CommissionSnapshot | null;
 }
 
-function buildBrief(product: Product, commission: CommissionSnapshot | null): string {
+export function buildBrief(product: Product, commission: CommissionSnapshot | null): string {
   // ยอดขายรายช่วงที่แม่นยำมาจาก analytics เท่านั้น — ถ้าไม่มีให้ระบุว่าข้อมูลย้อนหลังไม่พอ ห้ามแต่งตัวเลข
   const d7 = product.analytics?.d7;
   const d30 = product.analytics?.d30;

@@ -24,6 +24,7 @@ const MENU = [
   { href: "/compare", label: "COMPARE", thai: "เปรียบเทียบ" },
   { href: "/products", label: "SHOPEE", thai: "สินค้า Shopee" },
   { href: "/?platform=tiktok", label: "TIKTOK SHOP", thai: "สินค้า TikTok" },
+  { href: "/look-builder", label: "LOOK BUILDER", thai: "จับคู่ลุค" },
   { href: "/#content-ideas", label: "CONTENT IDEAS", thai: "ไอเดียคอนเทนต์" },
   { href: "/data-status", label: "PERFORMANCE", thai: "สถานะระบบ" },
 ] as const;

@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-เอกสารนี้ให้บริบทแก่ Claude Code (หรือ AI Assistant อื่น) เมื่อทำงานกับโค้ดในโปรเจกต์นี้
+เอกสารนี้ให้บริบทแก่ Codex (หรือ AI Assistant อื่น) เมื่อทำงานกับโค้ดในโปรเจกต์นี้
 
 ## ภาพรวมโปรเจกต์
 
@@ -54,27 +54,6 @@ lib/data-source/
 ดู [.env.example](./.env.example) — คัดลอกเป็น `.env.local` แล้วตั้งค่า:
 - `DATA_SOURCE_MODE` — `"mock"` (ค่าเริ่มต้น) หรือ `"windsor"`
 - `WINDSOR_API_KEY` — ต้องตั้งเมื่อใช้โหมด `windsor` **ห้าม prefix ด้วย `NEXT_PUBLIC_` เด็ดขาด** (จะทำให้ Next.js ฝังค่าลงไปใน JavaScript ฝั่ง client) อ่านเฉพาะใน `windsor-client.ts` เท่านั้น
-- `GEMINI_API_KEY` — **ตัวหลักของ AI vision tagging** ใช้โดย `lib/style/gemini-vision-tagger.ts` แท็ก style metadata + content-worthy score จากรูปสินค้า (รันต่อท้ายทุกรอบ sync ใน `app/api/shopee/import/route.ts`) สร้างฟรีไม่ต้องผูกบัตรที่ https://aistudio.google.com/apikey — Free Tier มีโควตา batch จึงจำกัด 8 ตัว/รอบ และหยุดเองเมื่อโควตาหมด
-- `ANTHROPIC_API_KEY` — ตัวสำรอง (มีค่าใช้จ่าย) ใช้เมื่อไม่ได้ตั้ง `GEMINI_API_KEY` เท่านั้น — ถ้าไม่มีทั้งคู่ ระบบใช้ rule-based extractor จากชื่อสินค้าเท่านั้น
-- `PARTNER_FEED_TOKEN` — bearer token คุ้มครอง `/api/partner-feed/products` (read-only JSON feed ให้ agency/AI agent ภายนอกเรียก) ไม่ตั้งค่า = endpoint ตอบ 401 เสมอ
-
-### Style metadata + Look Builder (เฟส 2-4, เพิ่ม 2026-07-13)
-
-```
-lib/style/
-  thai-keyword-extractor.ts  ← ดึง colors/style_tags/silhouette/fabric/detail_points จากชื่อสินค้า (rule-based, ฟรี)
-  gemini-vision-tagger.ts    ← ตัวหลัก: เรียก Google Gemini (gemini-2.5-flash-lite, Free Tier) แท็กจากรูปจริง + content_worthy_score
-  vision-tagger.ts           ← ตัวสำรอง: เรียก Claude API (claude-haiku-4-5, มีค่าใช้จ่าย) — shape ผลลัพธ์ (VisionTagResult) เดียวกัน
-  style-tag-batch.ts         ← orchestrator รันต่อท้ายทุกรอบ sync — เลือก provider: GEMINI_API_KEY > ANTHROPIC_API_KEY > ข้าม,
-                               จำกัด 8 ตัว/รอบ (Gemini) เว้น 4 วิ/คำขอ + งบเวลา 35 วิ, โควตาหมด (429) = หยุดรอรอบถัดไป
-lib/look-builder/
-  matching.ts                ← กฎจับคู่สี/ทรงตัด (rule-based ล้วน ไม่ใช้ ML)
-  storage.ts + hooks/use-look-builder.ts  ← เก็บลุคที่บันทึกไว้ใน localStorage (pattern เดียวกับ saved-products)
-lib/partner-feed/
-  auth.ts + map-product.ts   ← ใช้โดย app/api/partner-feed/products/[[...id]]
-```
-
-คอลัมน์ใหม่ใน `public.products` (migration `0010_style_and_wearable.sql`): `is_outfit_item`, `colors`, `style_tags`, `silhouette`, `fabric`, `detail_points`, `content_worthy_score`, `style_tagged_at` — ต้องรัน SQL นี้ก่อนใช้ฟีเจอร์เหล่านี้ (ดูการ์ด "สถานะตาราง Supabase" ที่หน้า `/data-status`)
 
 ### ข้อควรรู้เรื่องฟิลด์จาก Windsor.ai
 

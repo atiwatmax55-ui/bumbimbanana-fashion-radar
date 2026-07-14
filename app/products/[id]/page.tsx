@@ -4,6 +4,8 @@ import { getLatestCommissionForProduct } from "@/lib/commission/server";
 import { fetchProductHistory } from "@/lib/analytics/product-history";
 import { ProductDetailView } from "@/components/product-detail/product-detail-view";
 
+export const dynamic = "force-dynamic";
+
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
 }
